@@ -45,6 +45,9 @@ function handleTabChange(selectedTab) {
     if (isRecording) {
         stopRecording();
     }
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+    }
     setConversationState('paused');
 }
 
@@ -96,17 +99,24 @@ function stopRecording() {
 
 function updateTalkButton(isRecording) {
     const button = document.getElementById('talkButton');
+    const buttonLabel = document.querySelector('.talk-label');
     const stopButton = document.getElementById('stopButton');
     
     if (isRecording) {
         button.classList.add('recording');
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-danger');
         button.querySelector('i').classList.remove('fa-microphone');
         button.querySelector('i').classList.add('fa-microphone-slash');
+        buttonLabel.textContent = 'Recording...';
         stopButton.classList.remove('d-none');
     } else {
         button.classList.remove('recording');
+        button.classList.remove('btn-danger');
+        button.classList.add('btn-primary');
         button.querySelector('i').classList.remove('fa-microphone-slash');
         button.querySelector('i').classList.add('fa-microphone');
+        buttonLabel.textContent = 'Press to Talk';
         stopButton.classList.add('d-none');
     }
 }
@@ -145,23 +155,61 @@ function setConversationState(state) {
         state.includes('error') ? 'alert-danger' :
         state === 'Casey thinking' ? 'alert-warning' :
         state === 'user talking' ? 'alert-primary' :
+        state === 'Casey speaking' ? 'alert-info' :
         'alert-info'
     );
 }
 
 function playAudioResponse(text) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.onstart = () => setConversationState('Casey speaking');
-    utterance.onend = () => setConversationState('paused');
-    window.speechSynthesis.speak(utterance);
+    if ('speechSynthesis' in window) {
+        const talkButton = document.getElementById('talkButton');
+        const buttonLabel = document.querySelector('.talk-label');
+        
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        utterance.onstart = () => {
+            setConversationState('Casey speaking');
+            // Change button appearance
+            talkButton.classList.remove('btn-primary');
+            talkButton.classList.add('btn-danger');
+            talkButton.querySelector('i').classList.remove('fa-microphone');
+            talkButton.querySelector('i').classList.add('fa-stop');
+            buttonLabel.textContent = 'Stop';
+        };
+        
+        utterance.onend = () => {
+            setConversationState('paused');
+            // Restore button appearance
+            talkButton.classList.remove('btn-danger');
+            talkButton.classList.add('btn-primary');
+            talkButton.querySelector('i').classList.remove('fa-stop');
+            talkButton.querySelector('i').classList.add('fa-microphone');
+            buttonLabel.textContent = 'Press to Talk';
+        };
+        
+        window.speechSynthesis.speak(utterance);
+        
+        // Add click handler for stopping speech
+        talkButton.onclick = () => {
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                // Button appearance will be restored by onend handler
+            }
+        };
+    }
 }
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Talk button events
     const talkButton = document.getElementById('talkButton');
+    
     talkButton.addEventListener('mousedown', () => {
-        if (!isRecording) {
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        } else if (!isRecording) {
             startRecording();
         }
     });
