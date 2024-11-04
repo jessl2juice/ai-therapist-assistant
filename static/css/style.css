@@ -1,0 +1,31 @@
+.messages {
+    max-height: 400px;
+    overflow-y: auto;
+    background-color: var(--bs-dark);
+}
+
+.user-message, .casey-message {
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+
+.user-message {
+    background-color: var(--bs-primary);
+    margin-left: 20%;
+}
+
+.casey-message {
+    background-color: var(--bs-secondary);
+    margin-right: 20%;
+}
+
+#talkButton {
+    height: 100px;
+    font-size: 1.5rem;
+}
+
+#conversationState {
+    text-align: center;
+    margin-bottom: 1rem;
+}
