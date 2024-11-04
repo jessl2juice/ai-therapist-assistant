@@ -100,25 +100,21 @@ function stopRecording() {
 function updateTalkButton(isRecording) {
     const button = document.getElementById('talkButton');
     const buttonLabel = document.querySelector('.talk-label');
-    const stopButton = document.getElementById('stopButton');
     
     if (isRecording) {
         button.classList.add('recording');
         button.classList.remove('btn-primary');
         button.classList.add('btn-danger');
-        button.querySelector('i').classList.remove('fa-microphone');
-        button.querySelector('i').classList.add('fa-microphone-slash');
         buttonLabel.textContent = 'Recording...';
-        stopButton.classList.remove('d-none');
     } else {
         button.classList.remove('recording');
         button.classList.remove('btn-danger');
         button.classList.add('btn-primary');
-        button.querySelector('i').classList.remove('fa-microphone-slash');
-        button.querySelector('i').classList.add('fa-microphone');
         buttonLabel.textContent = 'Press to Talk';
-        stopButton.classList.add('d-none');
     }
+    
+    // Always keep microphone icon
+    button.querySelector('i').className = 'fas fa-microphone';
 }
 
 // Text handling
@@ -207,24 +203,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const talkButton = document.getElementById('talkButton');
     
     talkButton.addEventListener('mousedown', () => {
-        if (window.speechSynthesis.speaking) {
-            window.speechSynthesis.cancel();
-        } else if (!isRecording) {
+        if (!window.speechSynthesis.speaking && !isRecording) {
             startRecording();
+        }
+    });
+    
+    talkButton.addEventListener('mouseup', () => {
+        if (isRecording) {
+            stopRecording();
+        }
+    });
+    
+    // Also handle mouseleave to prevent stuck states
+    talkButton.addEventListener('mouseleave', () => {
+        if (isRecording) {
+            stopRecording();
         }
     });
     
     const stopButton = document.getElementById('stopButton');
     stopButton.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (isRecording) {
-            stopRecording();
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
         }
     });
     
-    // Text form submission
     document.getElementById('textForm').addEventListener('submit', handleTextSubmit);
-    
-    // Initialize with voice tab
     handleTabChange('voice');
 });
