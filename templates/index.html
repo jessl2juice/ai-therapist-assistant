@@ -11,20 +11,34 @@
 </head>
 <body>
     <div class="container-fluid min-vh-100 d-flex flex-column">
-        <header class="py-4 text-center">
-            <div class="logo-container mb-4">
-                <img src="{{ url_for('static', filename='images/CA Logo Ideogram 16.png') }}" 
-                     alt="Casey AI Logo" 
-                     class="logo img-fluid">
+        <header class="py-4">
+            <!-- Menu Bar -->
+            <div class="menu-bar d-flex justify-content-end mb-4">
+                <div class="btn-group">
+                    <button class="btn btn-outline-secondary" title="Login">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" title="Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
             </div>
-            <h1 class="display-4 mb-4">Casey - Your AI Therapist Assistant</h1>
-            <div class="btn-group" role="group" aria-label="Interaction Mode">
-                <button class="btn btn-outline-secondary active" onclick="handleTabChange('voice')" id="voiceTab">
-                    <i class="fas fa-microphone me-2"></i>Voice
-                </button>
-                <button class="btn btn-outline-secondary" onclick="handleTabChange('text')" id="textTab">
-                    <i class="fas fa-keyboard me-2"></i>Text
-                </button>
+            
+            <div class="text-center">
+                <div class="logo-container mb-4">
+                    <img src="{{ url_for('static', filename='images/CA Logo Ideogram 16.png') }}" 
+                         alt="Casey AI Logo" 
+                         class="logo img-fluid">
+                </div>
+                <h1 class="display-4 mb-4">Casey - Your AI Therapist Assistant</h1>
+                <div class="btn-group" role="group" aria-label="Interaction Mode">
+                    <button class="btn btn-outline-secondary active" onclick="handleTabChange('voice')" id="voiceTab">
+                        <i class="fas fa-microphone me-2"></i>Voice
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="handleTabChange('text')" id="textTab">
+                        <i class="fas fa-keyboard me-2"></i>Text
+                    </button>
+                </div>
             </div>
         </header>
 

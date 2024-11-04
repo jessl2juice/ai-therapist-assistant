@@ -11,6 +11,21 @@ body {
     color: var(--bs-dark);
 }
 
+/* Menu Bar Styles */
+.menu-bar {
+    padding: 0 1rem;
+}
+
+.menu-bar .btn-group .btn {
+    padding: 0.5rem 1rem;
+    font-size: 1.1rem;
+}
+
+.menu-bar .btn-group .btn:hover {
+    background-color: var(--bs-gray-200);
+    color: var(--bs-dark);
+}
+
 /* Logo Styles */
 .logo-container {
     max-width: 250px;  /* Increased from 180px */
@@ -207,6 +222,11 @@ body {
 
     .btn-group .btn {
         padding: 0.5rem 1rem;
+    }
+
+    .menu-bar .btn-group .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 1rem;
     }
 }
 
