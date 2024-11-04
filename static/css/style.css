@@ -86,6 +86,30 @@ h1 {
     font-size: 16px;
 }
 
+/* Stop button styles */
+.stop-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    margin: 10px auto;
+    transition: background-color 0.3s;
+}
+
+.stop-button:hover {
+    background-color: #c0392b;
+}
+
+.stop-button i {
+    font-size: 24px;
+}
+
 /* Status message */
 .status-message {
     text-align: center;
