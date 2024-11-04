@@ -316,6 +316,7 @@ function setConversationState(state) {
     
     if (state === 'paused') {
         stateElement.style.visibility = 'hidden';
+        stateElement.innerText = '';  // Clear the text content when paused
     } else {
         stateElement.style.visibility = 'visible';
         stateElement.className = `alert ${states[state] || 'alert-info'}`;
