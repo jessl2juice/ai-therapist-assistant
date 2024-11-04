@@ -309,17 +309,18 @@ function setConversationState(state) {
     const stateElement = document.getElementById('conversationState');
     const states = {
         'user talking': 'alert-primary',
+        'Casey thinking': 'alert-info',
         'Casey speaking': 'alert-success',
         'error': 'alert-danger'
     };
     
-    // Only show state for active speaking states and errors
-    if (state === 'user talking' || state === 'Casey speaking' || state === 'error') {
+    // Show state for active states
+    if (state === 'user talking' || state === 'Casey thinking' || state === 'Casey speaking' || state === 'error') {
         stateElement.style.visibility = 'visible';
         stateElement.className = `alert ${states[state] || 'alert-info'}`;
         stateElement.innerText = `${state}`;
     } else {
-        // Hide state for other states (paused, Casey thinking)
+        // Hide state for other states (paused)
         stateElement.style.visibility = 'hidden';
         stateElement.innerText = '';
     }
