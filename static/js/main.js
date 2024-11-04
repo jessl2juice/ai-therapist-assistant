@@ -6,7 +6,6 @@ let audioChunks = [];
 const MAX_CHUNK_SIZE = 1024 * 1024; // 1MB chunks
 const SOCKET_TIMEOUT = 30000; // 30 seconds timeout
 
-// Socket event handlers
 socket.on('connect', () => {
     console.log('Connected to server');
     setConnectionStatus('connected');
@@ -22,7 +21,6 @@ socket.on('connect_error', (error) => {
     setConnectionStatus('error');
 });
 
-// Enhanced response handler with debug logging
 socket.on('response', (data) => {
     console.log('Received response from server:', data);
     
@@ -128,7 +126,7 @@ async function sendAudioChunk() {
     try {
         const chunk = new Blob(audioChunks, { type: 'audio/webm' });
         console.log('Sending audio chunk:', chunk.size, 'bytes');
-        audioChunks = []; // Clear chunks after sending
+        audioChunks = [];
         
         const base64data = await blobToBase64(chunk);
         const emitPromise = new Promise((resolve, reject) => {
@@ -233,6 +231,9 @@ function playAudioResponse(text) {
         console.log('Playing audio response');
         window.speechSynthesis.cancel();
 
+        const stopButton = document.getElementById('stopButton');
+        stopButton.classList.remove('d-none');
+        
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1.0;
         utterance.pitch = 1.0;
@@ -245,14 +246,22 @@ function playAudioResponse(text) {
         utterance.onend = () => {
             console.log('Finished playing audio response');
             setConversationState('paused');
+            stopButton.classList.add('d-none');
         };
         
         utterance.onerror = (event) => {
             console.error('Speech synthesis error:', event);
             addSystemMessage('error', 'Error playing audio response. Please read the text instead.');
+            stopButton.classList.add('d-none');
         };
 
         window.speechSynthesis.speak(utterance);
+        
+        stopButton.onclick = () => {
+            window.speechSynthesis.cancel();
+            stopButton.classList.add('d-none');
+            setConversationState('paused');
+        };
     } else {
         console.warn('Text-to-speech not supported');
         addSystemMessage('warning', 'Text-to-speech is not supported in your browser.');
@@ -311,10 +320,8 @@ function setConversationState(state) {
     stateElement.innerText = `Conversation State: ${state}`;
 }
 
-// Event Listeners
 document.getElementById('talkButton').addEventListener('mousedown', startRecording);
 document.getElementById('talkButton').addEventListener('mouseup', stopRecording);
 document.getElementById('textForm').addEventListener('submit', handleTextSubmit);
 
-// Initialize the default tab
 handleTabChange('voice');

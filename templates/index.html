@@ -35,9 +35,14 @@
                         Conversation State: paused
                     </div>
                     <div class="d-flex flex-column align-items-center">
-                        <button class="btn btn-primary btn-lg talk-button rounded-circle" id="talkButton">
-                            <i class="fas fa-microphone"></i>
-                        </button>
+                        <div class="talk-button-container">
+                            <button class="btn btn-primary btn-lg talk-button rounded-circle" id="talkButton">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm stop-button d-none" id="stopButton">
+                                <i class="fas fa-stop"></i>
+                            </button>
+                        </div>
                         <span class="talk-label mt-3">Press to Talk</span>
                     </div>
                 </div>

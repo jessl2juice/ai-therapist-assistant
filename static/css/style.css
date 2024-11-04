@@ -36,7 +36,7 @@ body {
 
 /* Messages Container */
 .messages-container {
-    height: 335px;  /* Reduced from 500px to ~2/3 size */
+    height: 335px;
     min-height: unset;
     overflow-y: auto;
     background: var(--bs-light);
@@ -116,6 +116,26 @@ body {
     color: var(--bs-dark);
 }
 
+/* Stop Button Styles */
+.stop-button {
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.talk-button-container {
+    position: relative;
+    display: inline-block;
+}
+
 /* Button Group Styles */
 .btn-group {
     gap: 0.5rem;
@@ -145,6 +165,9 @@ body {
     background-color: var(--bs-info-subtle);
     color: var(--bs-info);
     border: none;
+    text-align: center !important;
+    width: 100%;
+    margin: 0 auto;
 }
 
 /* Responsive Design */
@@ -159,7 +182,7 @@ body {
     }
 
     .messages-container {
-        height: 270px;  /* Adjusted for mobile */
+        height: 270px;
     }
 
     .user-message, .casey-message {
