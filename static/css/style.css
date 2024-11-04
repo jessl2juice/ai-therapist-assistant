@@ -36,8 +36,10 @@ body {
 
 /* Messages Container */
 .messages-container {
-    height: calc(100vh - 350px);
-    min-height: 300px;
+    /* Set height to approximately 20 lines of text */
+    height: 500px;
+    min-height: unset;
+    overflow-y: auto;
     background: var(--bs-light);
     border: 1px solid var(--bs-gray-200);
     border-radius: 0.5rem;
@@ -156,8 +158,8 @@ body {
     }
 
     .messages-container {
-        height: calc(100vh - 380px);
-        min-height: 250px;
+        /* Adjust height for mobile */
+        height: 400px;
     }
 
     .user-message, .casey-message {
