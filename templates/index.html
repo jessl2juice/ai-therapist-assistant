@@ -22,7 +22,7 @@
 
     <div class="container">
         <div class="welcome-section text-center py-5">
-            <img src="{{ url_for('static', filename='images/clinician-assist-logo.png') }}" 
+            <img src="{{ url_for('static', filename='images/logo.png') }}" 
                  alt="Clinician Assist Logo" 
                  class="mb-4 logo-gradient" 
                  width="150">
@@ -44,14 +44,14 @@
         </ul>
 
         <div class="tab-content py-4">
-            <div id="voiceTabContent" class="tab-pane fade show active">
+            <div id="voiceTabContent" class="tab-pane">
                 <div id="conversationState" class="text-center mb-4">
                     Conversation State: paused
                 </div>
                 <button class="talk-button" id="talkButton">Talk</button>
             </div>
 
-            <div id="textTabContent" class="tab-pane fade" style="display: none;">
+            <div id="textTabContent" class="tab-pane">
                 <div class="messages-container mb-4">
                     <div id="messages" class="messages rounded"></div>
                 </div>

@@ -62,20 +62,31 @@ function handleTabChange(selectedTab) {
     console.log('Switching to tab:', selectedTab);
     currentTab = selectedTab;
     
-    // Get all tab contents
-    const voiceContent = document.getElementById('voiceTabContent');
-    const textContent = document.getElementById('textTabContent');
+    // Update tab buttons
+    document.querySelectorAll('.nav-link').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.id === `${selectedTab}Tab`) {
+            tab.classList.add('active');
+        }
+    });
     
-    // Update visibility
-    if (voiceContent) voiceContent.style.display = selectedTab === 'voice' ? 'block' : 'none';
-    if (textContent) textContent.style.display = selectedTab === 'text' ? 'block' : 'none';
+    // Update content visibility
+    document.querySelectorAll('.tab-pane').forEach(content => {
+        content.style.display = 'none';
+    });
     
-    // Update tab buttons if they exist
-    const voiceTab = document.getElementById('voiceTab');
-    const textTab = document.getElementById('textTab');
+    const selectedContent = document.getElementById(`${selectedTab}TabContent`);
+    if (selectedContent) {
+        selectedContent.style.display = 'block';
+    }
     
-    if (voiceTab) voiceTab.classList.toggle('active', selectedTab === 'voice');
-    if (textTab) textTab.classList.toggle('active', selectedTab === 'text');
+    // Initialize messages container if switching to text tab
+    if (selectedTab === 'text') {
+        const messagesDiv = document.getElementById('messages');
+        if (messagesDiv && messagesDiv.children.length === 0) {
+            addSystemMessage('info', 'Welcome! Feel free to start the conversation.');
+        }
+    }
 }
 
 async function startRecording() {
