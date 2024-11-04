@@ -3,10 +3,9 @@ let currentTab = 'voice';
 let isRecording = false;
 let mediaRecorder;
 let audioChunks = [];
-const MAX_CHUNK_SIZE = 1024 * 1024; // 1MB chunks
-const SOCKET_TIMEOUT = 30000; // 30 seconds timeout
+const MAX_CHUNK_SIZE = 1024 * 1024;
+const SOCKET_TIMEOUT = 30000;
 
-// Socket event handlers
 socket.on('connect', () => {
     console.log('Connected to server');
     setConnectionStatus('connected');
@@ -22,7 +21,6 @@ socket.on('connect_error', (error) => {
     setConnectionStatus('error');
 });
 
-// Enhanced response handler with debug logging
 socket.on('response', (data) => {
     console.log('Received response from server:', data);
     
@@ -128,7 +126,7 @@ async function sendAudioChunk() {
     try {
         const chunk = new Blob(audioChunks, { type: 'audio/webm' });
         console.log('Sending audio chunk:', chunk.size, 'bytes');
-        audioChunks = []; // Clear chunks after sending
+        audioChunks = [];
         
         const base64data = await blobToBase64(chunk);
         const emitPromise = new Promise((resolve, reject) => {
@@ -316,14 +314,17 @@ function setConversationState(state) {
         'error': 'alert-danger'
     };
     
-    stateElement.className = `alert ${states[state] || 'alert-info'}`;
-    stateElement.innerText = `Conversation State: ${state}`;
+    if (state === 'paused') {
+        stateElement.style.visibility = 'hidden';
+    } else {
+        stateElement.style.visibility = 'visible';
+        stateElement.className = `alert ${states[state] || 'alert-info'}`;
+        stateElement.innerText = `Conversation State: ${state}`;
+    }
 }
 
-// Event Listeners
 document.getElementById('talkButton').addEventListener('mousedown', startRecording);
 document.getElementById('talkButton').addEventListener('mouseup', stopRecording);
 document.getElementById('textForm').addEventListener('submit', handleTextSubmit);
 
-// Initialize the default tab
 handleTabChange('voice');
