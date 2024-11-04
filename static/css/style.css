@@ -115,9 +115,8 @@ h1 {
     text-align: center;
     padding: 10px;
     margin-bottom: 20px;
-    background-color: #f8f9fa;
-    border-radius: 4px;
-    border: 1px solid #dee2e6;
+    font-weight: 500;
+    color: #2c3e50;
 }
 
 /* Messages container */
@@ -179,16 +178,16 @@ h1 {
     background-color: #27ae60;
 }
 
-/* Alert styles */
+/* Alert styles - removed box styling but kept colors */
 .alert {
     padding: 10px;
     margin: 10px 0;
-    border-radius: 4px;
     text-align: center;
+    font-weight: 500;
 }
 
-.alert-info { background-color: #d1ecf1; color: #0c5460; }
-.alert-primary { background-color: #cce5ff; color: #004085; }
-.alert-warning { background-color: #fff3cd; color: #856404; }
-.alert-success { background-color: #d4edda; color: #155724; }
-.alert-danger { background-color: #f8d7da; color: #721c24; }
+.alert-info { color: #0c5460; }
+.alert-primary { color: #004085; }
+.alert-warning { color: #856404; }
+.alert-success { color: #155724; }
+.alert-danger { color: #721c24; }
