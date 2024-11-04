@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casey - Your AI Therapist Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #000;
+        }
+        .tabs {
+            margin-bottom: 20px;
+        }
+        .tabs button {
+            padding: 10px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .tabs .active {
+            background-color: #ddd;
+        }
+        .voice-tab, .text-tab {
+            margin-top: 20px;
+        }
+        .talk-button {
+            background-color: red;
+            color: white;
+            padding: 20px;
+            border: none;
+            cursor: pointer;
+        }
+        .messages {
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .user-message, .casey-message {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Casey - Your AI Therapist Assistant</h1>
+        <div class="tabs">
+            <button onclick="handleTabChange('voice')" id="voiceTab">Voice</button>
+            <button onclick="handleTabChange('text')" id="textTab">Text</button>
+        </div>
+    </header>
+    <main>
+        <div id="voiceTabContent" style="display: none;">
+            <div id="conversationState">Conversation State: paused</div>
+            <button class="talk-button" id="talkButton">Press to Talk</button>
+        </div>
+        <div id="textTabContent" style="display: none;">
+            <div class="messages" id="messages"></div>
+            <form id="textForm">
+                <input type="text" id="messageInput" placeholder="Type your message..." required />
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        let currentTab = 'voice';
+        let isRecording = false;
+        let audioChunks = [];
+        let mediaRecorder;
+        let conversationState = 'paused';
+        let ws;
+
+        // WebSocket connection
+        function connectWebSocket() {
+            ws = new WebSocket("wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01");
+            ws.onopen = () => {
+                console.log("Connected to server.");
+            };
+
+            ws.onmessage = (message) => {
+                const data = JSON.parse(message.data);
+                if (data && data.type === "response.create") {
+                    addMessage('Casey', data.response.content);
+                    setConversationState('paused');
+                    playAudioResponse(data.response.content);
+                }
+            };
+        }
+
+        connectWebSocket();
+
+        function handleTabChange(selectedTab) {
+            currentTab = selectedTab;
+            document.getElementById('voiceTabContent').style.display = selectedTab === 'voice' ? 'block' : 'none';
+            document.getElementById('textTabContent').style.display = selectedTab === 'text' ? 'block' : 'none';
+        }
+
+        function handlePressToTalk() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        async function startRecording() {
+            setConversationState('user talking');
+            isRecording = true;
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                }
+            };
+            mediaRecorder.onstop = sendAudioToAPI;
+            mediaRecorder.start();
+        }
+
+        function stopRecording() {
+            setConversationState('Casey thinking');
+            isRecording = false;
+            mediaRecorder.stop();
+        }
+
+        function sendAudioToAPI() {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            audioChunks = [];
+            ws.send(JSON.stringify({
+                type: "response.create",
+                response: {
+                    modalities: ["audio"],
+                    instructions: "Please assist the user based on the provided audio.",
+                    audio: audioBlob, // Placeholder, needs conversion
+                },
+            }));
+        }
+
+        function playAudioResponse(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function handleTextSubmit(event) {
+            event.preventDefault();
+            const userMessage = document.getElementById('messageInput').value;
+            addMessage('User', userMessage);
+            ws.send(JSON.stringify({
+                type: "response.create",
+                response: {
+                    modalities: ["text"],
+                    instructions: userMessage,
+                },
+            }));
+            document.getElementById('messageInput').value = '';
+        }
+
+        function addMessage(sender, text) {
+            const messagesDiv = document.getElementById('messages');
+            const messageElement = document.createElement('p');
+            messageElement.className = sender === 'User' ? 'user-message' : 'casey-message';
+            messageElement.innerHTML = `<strong>${sender}:</strong> ${text}`;
+            messagesDiv.appendChild(messageElement);
+        }
+
+        function setConversationState(state) {
+            conversationState = state;
+            document.getElementById('conversationState').innerText = `Conversation State: ${state}`;
+        }
+
+        document.getElementById('talkButton').addEventListener('mousedown', handlePressToTalk);
+        document.getElementById('talkButton').addEventListener('mouseup', handlePressToTalk);
+        document.getElementById('textForm').addEventListener('submit', handleTextSubmit);
+
+        // Initialize the default tab
+        handleTabChange('voice');
+    </script>
+</body>
+</html>
