@@ -45,9 +45,40 @@ socket.on('error', (data) => {
 });
 
 function toggleSettings() {
-    // This function will be expanded later to show a settings modal
-    // For now, it only rotates the icon on click through CSS
-    console.log('Settings icon clicked');
+    const modal = document.getElementById('settingsModal');
+    const currentDisplay = window.getComputedStyle(modal).display;
+    modal.style.display = currentDisplay === 'none' ? 'block' : 'none';
+    
+    if (currentDisplay === 'none') {
+        // Populate voice options when opening
+        populateVoiceOptions();
+    }
+}
+
+function populateVoiceOptions() {
+    const voiceSelect = document.getElementById('voiceSelect');
+    let voices = window.speechSynthesis.getVoices();
+    
+    // If voices aren't loaded yet, wait for them
+    if (voices.length === 0) {
+        window.speechSynthesis.addEventListener('voiceschanged', () => {
+            voices = window.speechSynthesis.getVoices();
+            updateVoiceList(voices);
+        });
+    } else {
+        updateVoiceList(voices);
+    }
+}
+
+function updateVoiceList(voices) {
+    const voiceSelect = document.getElementById('voiceSelect');
+    voiceSelect.innerHTML = '';
+    voices.forEach(voice => {
+        const option = document.createElement('option');
+        option.textContent = `${voice.name} (${voice.lang})`;
+        option.value = voice.name;
+        voiceSelect.appendChild(option);
+    });
 }
 
 function setConnectionStatus(status) {
@@ -236,8 +267,12 @@ function playAudioResponse(text) {
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
+        utterance.voice = speechSynthesis.getVoices().find(voice => 
+            voice.name === document.getElementById('voiceSelect').value
+        );
+        utterance.rate = parseFloat(document.getElementById('rateRange').value);
+        utterance.pitch = parseFloat(document.getElementById('pitchRange').value);
+        utterance.volume = parseFloat(document.getElementById('volumeRange').value);
         
         const stopButton = document.getElementById('stopButton');
         stopButton.style.display = 'flex';
@@ -329,6 +364,34 @@ function setConversationState(state) {
     }
 }
 
+// Add event listeners for voice settings
+document.getElementById('rateRange').addEventListener('input', function() {
+    document.getElementById('rateValue').textContent = this.value;
+});
+
+document.getElementById('pitchRange').addEventListener('input', function() {
+    document.getElementById('pitchValue').textContent = this.value;
+});
+
+document.getElementById('volumeRange').addEventListener('input', function() {
+    document.getElementById('volumeValue').textContent = this.value;
+});
+
+// Add test voice functionality
+document.getElementById('testVoiceButton').addEventListener('click', function() {
+    const testText = "Hello, this is a test of the voice settings.";
+    const utterance = new SpeechSynthesisUtterance(testText);
+    
+    utterance.voice = speechSynthesis.getVoices().find(voice => 
+        voice.name === document.getElementById('voiceSelect').value
+    );
+    utterance.rate = parseFloat(document.getElementById('rateRange').value);
+    utterance.pitch = parseFloat(document.getElementById('pitchRange').value);
+    utterance.volume = parseFloat(document.getElementById('volumeRange').value);
+    
+    window.speechSynthesis.speak(utterance);
+});
+
 document.getElementById('talkButton').addEventListener('mousedown', startRecording);
 document.getElementById('talkButton').addEventListener('mouseup', stopRecording);
 document.getElementById('textForm').addEventListener('submit', handleTextSubmit);
@@ -337,4 +400,5 @@ handleTabChange('voice');
 
 document.addEventListener('DOMContentLoaded', () => {
     setConversationState('paused');
+    populateVoiceOptions();
 });
