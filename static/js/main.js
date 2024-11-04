@@ -1,23 +1,10 @@
-const socket = io({
-    autoConnect: false,
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    reconnectionAttempts: 5,
-    withCredentials: true
-});
-
+const socket = io();
 let currentTab = 'voice';
 let isRecording = false;
 let mediaRecorder;
 let audioChunks = [];
 const MAX_CHUNK_SIZE = 1024 * 1024;
 const SOCKET_TIMEOUT = 30000;
-
-document.addEventListener('DOMContentLoaded', () => {
-    socket.connect();
-    setConversationState('paused');
-});
 
 socket.on('connect', () => {
     console.log('Connected to server');
@@ -32,10 +19,6 @@ socket.on('disconnect', () => {
 socket.on('connect_error', (error) => {
     console.error('Connection error:', error);
     setConnectionStatus('error');
-    if (error.message === 'Unauthorized') {
-        addSystemMessage('error', 'Please log in to continue');
-        window.location.href = '/login';
-    }
 });
 
 socket.on('response', (data) => {
@@ -59,12 +42,6 @@ socket.on('error', (data) => {
     const errorMessage = data.message || 'An unexpected error occurred. Please try again.';
     addSystemMessage('error', errorMessage);
     setConversationState('error');
-    
-    if (data.message === 'Unauthorized') {
-        setTimeout(() => {
-            window.location.href = '/login';
-        }, 2000);
-    }
 });
 
 function setConnectionStatus(status) {
@@ -337,11 +314,13 @@ function setConversationState(state) {
         'error': 'alert-danger'
     };
     
+    // Show state for active states
     if (state === 'user talking' || state === 'Casey thinking' || state === 'Casey speaking' || state === 'error') {
         stateElement.style.visibility = 'visible';
         stateElement.className = `alert ${states[state] || 'alert-info'}`;
         stateElement.innerText = `${state}`;
     } else {
+        // Hide state for other states (paused)
         stateElement.style.visibility = 'hidden';
         stateElement.innerText = '';
     }
@@ -352,3 +331,7 @@ document.getElementById('talkButton').addEventListener('mouseup', stopRecording)
 document.getElementById('textForm').addEventListener('submit', handleTextSubmit);
 
 handleTabChange('voice');
+
+document.addEventListener('DOMContentLoaded', () => {
+    setConversationState('paused');
+});
