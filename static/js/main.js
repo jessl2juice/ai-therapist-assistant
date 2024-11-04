@@ -329,3 +329,8 @@ document.getElementById('talkButton').addEventListener('mouseup', stopRecording)
 document.getElementById('textForm').addEventListener('submit', handleTextSubmit);
 
 handleTabChange('voice');
+
+// Initialize conversation state to be hidden on page load
+document.addEventListener('DOMContentLoaded', () => {
+    setConversationState('paused');
+});
