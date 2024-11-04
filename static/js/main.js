@@ -12,20 +12,33 @@ let voiceSettings = {
     pitch: 1.0,
     volume: 1.0
 };
-let reconnectAttempts = 0;
-const maxReconnectAttempts = 3;
 
 // Load saved voice settings
 function loadVoiceSettings() {
     const savedSettings = localStorage.getItem('voiceSettings');
     if (savedSettings) {
-        voiceSettings = JSON.parse(savedSettings);
+        const settings = JSON.parse(savedSettings);
+        voiceSettings = {
+            ...voiceSettings,
+            rate: settings.rate || 1.0,
+            pitch: settings.pitch || 1.0,
+            volume: settings.volume || 1.0
+        };
     }
 }
 
 // Save voice settings
 function saveVoiceSettings() {
-    localStorage.setItem('voiceSettings', JSON.stringify(voiceSettings));
+    const settings = {
+        rate: voiceSettings.rate,
+        pitch: voiceSettings.pitch,
+        volume: voiceSettings.volume
+    };
+    if (voiceSettings.voice) {
+        settings.voiceName = voiceSettings.voice.name;
+        settings.voiceLang = voiceSettings.voice.lang;
+    }
+    localStorage.setItem('voiceSettings', JSON.stringify(settings));
 }
 
 // Initialize voice settings
@@ -42,8 +55,9 @@ function initVoiceSettings() {
             const option = document.createElement('option');
             option.value = index;
             option.textContent = `${voice.name} - ${voice.lang}`;
-            if (voiceSettings.voice && voice.name === voiceSettings.voice.name) {
+            if (voiceSettings.voiceName && voice.name === voiceSettings.voiceName) {
                 option.selected = true;
+                voiceSettings.voice = voice;
             }
             voiceSelect.appendChild(option);
         });
@@ -93,7 +107,6 @@ function initVoiceSettings() {
 // Socket event listeners
 socket.on('connect', () => {
     console.log('Connected to server');
-    reconnectAttempts = 0;
     setConversationState('paused');  // Reset state on reconnect
 });
 
@@ -102,28 +115,38 @@ socket.on('disconnect', () => {
     if (isRecording) {
         stopRecording();
     }
-    setConversationState('error: Connection lost. Trying to reconnect...');
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+    }
+    setConversationState('error: Connection lost. Reconnecting...');
+    
+    // Attempt to reconnect
+    setTimeout(() => {
+        if (!socket.connected) {
+            socket.connect();
+        }
+    }, 1000);
 });
 
 socket.on('connect_error', (error) => {
     console.error('Connection error:', error);
-    setConversationState('error: Please refresh the page to reconnect');
+    if (isRecording) {
+        stopRecording();
+    }
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+    }
+    setConversationState('error: Connection error. Please try again.');
     updateTalkButton(false);
 });
 
 socket.on('error', (error) => {
     console.error('Socket error:', error);
-    setConversationState('error: Connection error. Please try again');
-    updateTalkButton(false);
-});
-
-// Add error handler for unhandled rejections
-window.addEventListener('unhandledrejection', (event) => {
-    console.error('Unhandled rejection:', event.reason);
     if (isRecording) {
         stopRecording();
     }
-    setConversationState('error: Something went wrong. Please try again.');
+    setConversationState('error: Connection error. Please try again');
+    updateTalkButton(false);
 });
 
 socket.on('response', (data) => {
@@ -159,8 +182,14 @@ function handleTabChange(selectedTab) {
 
 // Voice handling
 function startRecording() {
+    // Reset any stuck states
+    if (document.getElementById('conversationState').textContent.includes('error')) {
+        setConversationState('paused');
+    }
+    
     if (isRecording) {
         stopRecording();
+        return;
     }
     
     navigator.mediaDevices.getUserMedia({ audio: true })
@@ -170,13 +199,6 @@ function startRecording() {
                 if (event.data.size > 0) {
                     audioChunks.push(event.data);
                 }
-            };
-            mediaRecorder.onstop = () => {
-                sendAudioToAPI()
-                    .catch(error => {
-                        console.error('Error in sendAudioToAPI:', error);
-                        setConversationState('error: Failed to process audio. Please try again.');
-                    });
             };
             mediaRecorder.start();
             isRecording = true;
@@ -195,11 +217,24 @@ async function stopRecording() {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         try {
             mediaRecorder.stop();
-            await new Promise(resolve => mediaRecorder.onstop = resolve);
-            await sendAudioToAPI();
             mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            isRecording = false;
-            updateTalkButton(false);
+            await new Promise((resolve) => {
+                mediaRecorder.onstop = () => {
+                    sendAudioToAPI()
+                        .then(() => {
+                            isRecording = false;
+                            updateTalkButton(false);
+                            resolve();
+                        })
+                        .catch(error => {
+                            console.error('Error sending audio:', error);
+                            setConversationState('error: Failed to send audio. Please try again.');
+                            isRecording = false;
+                            updateTalkButton(false);
+                            resolve();
+                        });
+                };
+            });
         } catch (error) {
             console.error('Error in stopRecording:', error);
             isRecording = false;
@@ -302,7 +337,7 @@ function setConversationState(state) {
                 updateTalkButton(false);
                 setConversationState('error: Operation timed out. Click to try again');
             }
-        }, 15000); // Increased timeout to 15 seconds
+        }, 15000);
     }
     
     stateElement.className = 'alert ' + (
@@ -316,10 +351,12 @@ function setConversationState(state) {
 
 function playAudioResponse(text) {
     if ('speechSynthesis' in window) {
+        // Cancel any ongoing speech
         window.speechSynthesis.cancel();
         
         const utterance = new SpeechSynthesisUtterance(text);
         
+        // Apply voice settings
         if (voiceSettings.voice) {
             utterance.voice = voiceSettings.voice;
         }
@@ -333,6 +370,12 @@ function playAudioResponse(text) {
         
         utterance.onend = () => {
             setConversationState('paused');
+        };
+        
+        utterance.onerror = (event) => {
+            console.error('Speech synthesis error:', event);
+            setConversationState('error: Voice playback failed');
+            setTimeout(() => setConversationState('paused'), 2000);
         };
         
         window.speechSynthesis.speak(utterance);
@@ -358,14 +401,12 @@ document.addEventListener('DOMContentLoaded', () => {
     talkButton.addEventListener('mouseup', () => {
         if (isRecording) {
             stopRecording();
-            setConversationState('Casey thinking');
         }
     });
     
     talkButton.addEventListener('mouseleave', () => {
         if (isRecording) {
             stopRecording();
-            setConversationState('Casey thinking');
         }
     });
     
@@ -380,7 +421,6 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         if (isRecording) {
             stopRecording();
-            setConversationState('Casey thinking');
         }
     });
     
