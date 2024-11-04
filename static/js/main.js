@@ -183,11 +183,9 @@ function updateTalkButton(isRecording) {
     if (isRecording) {
         button.classList.add('btn-warning');
         button.classList.remove('btn-danger');
-        button.innerText = 'Release to Stop';
     } else {
         button.classList.add('btn-danger');
         button.classList.remove('btn-warning');
-        button.innerText = 'Press to Talk';
     }
 }
 
@@ -316,7 +314,7 @@ function setConversationState(state) {
     
     if (state === 'paused') {
         stateElement.style.visibility = 'hidden';
-        stateElement.innerText = '';  // Clear the text content when paused
+        stateElement.innerText = '';
     } else {
         stateElement.style.visibility = 'visible';
         stateElement.className = `alert ${states[state] || 'alert-info'}`;
@@ -330,7 +328,6 @@ document.getElementById('textForm').addEventListener('submit', handleTextSubmit)
 
 handleTabChange('voice');
 
-// Initialize conversation state to be hidden on page load
 document.addEventListener('DOMContentLoaded', () => {
     setConversationState('paused');
 });
