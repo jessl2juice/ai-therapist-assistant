@@ -11,4 +11,7 @@ dependencies = [
     "psycopg2-binary>=2.9.10",
     "flask-socketio>=5.4.1",
     "eventlet",
+    "flask-wtf",
+    "flask-login",
+    "flask-migrate",
 ]
