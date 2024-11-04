@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casey - Your AI Therapist Assistant</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid min-vh-100">
+        <!-- Header -->
+        <header class="d-flex justify-content-between align-items-center py-4">
+            <div class="logo-text">
+                <a href="/" class="text-decoration-none">
+                    <h1 class="h3 mb-0">Casey</h1>
+                </a>
+            </div>
+            <div class="auth-links">
+                <a href="/login" class="btn btn-link">Login</a>
+                <a href="/register" class="btn btn-link">Register</a>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container text-center py-5">
+            <!-- Logo -->
+            <div class="logo-container mb-5">
+                <img src="{{ url_for('static', filename='images/CA Logo Ideogram 16.png') }}" 
+                     alt="Casey Logo" 
+                     class="img-fluid">
+            </div>
+
+            <!-- Welcome Text -->
+            <h1 class="display-4 mb-3">Welcome to Casey</h1>
+            <h2 class="h3 text-secondary mb-4">Your AI Therapist Assistant</h2>
+            
+            <!-- Description -->
+            <p class="lead mb-5">
+                A safe space to talk about your feelings and receive supportive guidance. 
+                Your conversations are private and secure.
+            </p>
+
+            <!-- Feature Cards -->
+            <div class="row justify-content-center mb-5">
+                <div class="col-md-5 mb-4 mb-md-0">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h3 class="card-title">Voice Interaction</h3>
+                            <p class="card-text">
+                                Speak naturally with Casey using voice commands for a more personal experience.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h3 class="card-title">Text Chat</h3>
+                            <p class="card-text">
+                                Type your thoughts and receive thoughtful responses from Casey.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="/login" class="btn btn-primary btn-lg me-3">Login</a>
+                <a href="/register" class="btn btn-outline-primary btn-lg">Register</a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

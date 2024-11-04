@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for
 from flask_socketio import SocketIO, emit
 from openai_helper import get_ai_response
 
@@ -14,8 +14,22 @@ app.config['MAX_CONTENT_LENGTH'] = 25 * 1024 * 1024  # 25MB max size
 socketio = SocketIO(app)
 
 @app.route('/')
-def index():
+def landing():
+    return render_template('landing.html')
+
+@app.route('/chat')
+def chat():
     return render_template('index.html')
+
+@app.route('/login')
+def login():
+    # Placeholder route for login page
+    return redirect(url_for('chat'))  # Temporary redirect to chat
+
+@app.route('/register')
+def register():
+    # Placeholder route for register page
+    return redirect(url_for('chat'))  # Temporary redirect to chat
 
 @socketio.on('message')
 def handle_message(data):
