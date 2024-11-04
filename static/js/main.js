@@ -22,6 +22,7 @@ socket.on('connect_error', (error) => {
     setConnectionStatus('error');
 });
 
+// Enhanced response handler with debug logging
 socket.on('response', (data) => {
     console.log('Received response from server:', data);
     
@@ -64,7 +65,7 @@ function handleTabChange(selectedTab) {
     document.getElementById('voiceTabContent').style.display = selectedTab === 'voice' ? 'block' : 'none';
     document.getElementById('textTabContent').style.display = selectedTab === 'text' ? 'block' : 'none';
     
-    document.querySelectorAll('.tab-group button').forEach(btn => {
+    document.querySelectorAll('.btn-group button').forEach(btn => {
         btn.classList.remove('active');
     });
     document.getElementById(`${selectedTab}Tab`).classList.add('active');
@@ -121,31 +122,6 @@ function getTotalSize(chunks) {
     return chunks.reduce((total, chunk) => total + chunk.size, 0);
 }
 
-function updateTalkButton(isRecording) {
-    const button = document.getElementById('talkButton');
-    if (isRecording) {
-        button.classList.add('recording');
-        button.innerHTML = '<i class="fas fa-microphone-slash"></i>';
-    } else {
-        button.classList.remove('recording');
-        button.innerHTML = '<i class="fas fa-microphone"></i>';
-    }
-}
-
-function stopRecording() {
-    console.log('Stopping recording');
-    if (mediaRecorder && isRecording) {
-        setConversationState('Casey thinking');
-        isRecording = false;
-        mediaRecorder.stop();
-        updateTalkButton(false);
-        
-        if (mediaRecorder.stream) {
-            mediaRecorder.stream.getTracks().forEach(track => track.stop());
-        }
-    }
-}
-
 async function sendAudioChunk() {
     if (audioChunks.length === 0) return;
 
@@ -188,6 +164,33 @@ function blobToBase64(blob) {
         };
         reader.readAsDataURL(blob);
     });
+}
+
+function stopRecording() {
+    console.log('Stopping recording');
+    if (mediaRecorder && isRecording) {
+        setConversationState('Casey thinking');
+        isRecording = false;
+        mediaRecorder.stop();
+        updateTalkButton(false);
+        
+        if (mediaRecorder.stream) {
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        }
+    }
+}
+
+function updateTalkButton(isRecording) {
+    const button = document.getElementById('talkButton');
+    if (isRecording) {
+        button.classList.add('btn-warning');
+        button.classList.remove('btn-danger');
+        button.innerText = 'Release to Stop';
+    } else {
+        button.classList.add('btn-danger');
+        button.classList.remove('btn-warning');
+        button.innerText = 'Press to Talk';
+    }
 }
 
 async function sendAudioToServer() {

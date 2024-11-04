@@ -58,10 +58,10 @@ h1 {
 }
 
 .talk-button {
-    width: 150px;
-    height: 150px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
-    background-color: #2563eb;
+    background-color: #3498db;
     color: white;
     border: none;
     cursor: pointer;
@@ -69,20 +69,15 @@ h1 {
     align-items: center;
     justify-content: center;
     margin: 0 auto;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s;
 }
 
 .talk-button:hover {
-    background-color: #1d4ed8;
-    transform: scale(1.05);
-}
-
-.talk-button.recording {
-    background-color: #dc2626;
+    background-color: #2980b9;
 }
 
 .talk-button i {
-    font-size: 48px;
+    font-size: 32px;
 }
 
 .talk-label {
