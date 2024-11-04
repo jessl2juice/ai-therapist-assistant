@@ -19,6 +19,21 @@ body {
     position: relative;
 }
 
+/* Settings icon styles */
+.settings-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 24px;
+    color: #1E90FF;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.settings-icon:hover {
+    transform: rotate(45deg);
+}
+
 /* Logo styles */
 .logo-container {
     text-align: center;

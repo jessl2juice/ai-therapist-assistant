@@ -44,6 +44,12 @@ socket.on('error', (data) => {
     setConversationState('error');
 });
 
+function toggleSettings() {
+    // This function will be expanded later to show a settings modal
+    // For now, it only rotates the icon on click through CSS
+    console.log('Settings icon clicked');
+}
+
 function setConnectionStatus(status) {
     console.log('Connection status changed:', status);
     const statusMessages = {
@@ -313,13 +319,11 @@ function setConversationState(state) {
         'error': 'alert-danger'
     };
     
-    // Only show state for active speaking states and errors
     if (state === 'user talking' || state === 'Casey speaking' || state === 'error') {
         stateElement.style.visibility = 'visible';
         stateElement.className = `alert ${states[state] || 'alert-info'}`;
         stateElement.innerText = `${state}`;
     } else {
-        // Hide state for other states (paused, Casey thinking)
         stateElement.style.visibility = 'hidden';
         stateElement.innerText = '';
     }
