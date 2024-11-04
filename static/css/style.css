@@ -1,20 +1,37 @@
 /* Global Styles */
 body {
-    background: var(--bs-dark);
-    color: var(--bs-light);
+    background: var(--bs-light);
+    color: var(--bs-dark);
+}
+
+/* Logo Styles */
+.logo-container {
+    max-width: 200px;
+    margin: 0 auto;
+}
+
+.logo {
+    width: 100%;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05);
 }
 
 /* Messages Container */
 .messages-container {
-    height: calc(100vh - 300px);
+    height: calc(100vh - 400px);
     min-height: 400px;
 }
 
 .messages {
     height: 100%;
     overflow-y: auto;
-    background: var(--bs-dark);
-    border: 1px solid var(--bs-secondary);
+    background: var(--bs-light);
+    border: 1px solid var(--bs-gray-300);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Message Styles */
@@ -23,16 +40,19 @@ body {
     margin: 0.5rem;
     border-radius: 0.5rem;
     max-width: 80%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .user-message {
-    background-color: var(--bs-primary);
+    background-color: var(--bs-primary-subtle);
     margin-left: auto;
+    color: var(--bs-primary);
 }
 
 .casey-message {
-    background-color: var(--bs-secondary);
+    background-color: var(--bs-gray-100);
     margin-right: auto;
+    color: var(--bs-dark);
 }
 
 /* Talk Button Styles */
@@ -41,6 +61,8 @@ body {
     font-size: 1.5rem;
     border-radius: 1rem;
     transition: all 0.3s ease;
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
 }
 
 .talk-button:active {
@@ -55,12 +77,19 @@ body {
 #conversationState {
     font-size: 1.1rem;
     border-radius: 0.5rem;
+    background-color: var(--bs-info-subtle);
+    color: var(--bs-info);
+    border-color: var(--bs-info-subtle);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .logo-container {
+        max-width: 150px;
+    }
+
     .messages-container {
-        height: calc(100vh - 250px);
+        height: calc(100vh - 350px);
     }
 
     .user-message, .casey-message {
@@ -76,26 +105,38 @@ body {
 /* Animation */
 @keyframes pulse {
     0% {
-        box-shadow: 0 0 0 0 rgba(var(--bs-danger-rgb), 0.7);
+        box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0.7);
     }
     70% {
-        box-shadow: 0 0 0 10px rgba(var(--bs-danger-rgb), 0);
+        box-shadow: 0 0 0 10px rgba(var(--bs-primary-rgb), 0);
     }
     100% {
-        box-shadow: 0 0 0 0 rgba(var(--bs-danger-rgb), 0);
+        box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0);
     }
 }
 
 /* Input Styles */
 .form-control {
-    background-color: var(--bs-dark);
-    border-color: var(--bs-secondary);
-    color: var(--bs-light);
+    background-color: var(--bs-light);
+    border-color: var(--bs-gray-300);
+    color: var(--bs-dark);
 }
 
 .form-control:focus {
-    background-color: var(--bs-dark);
+    background-color: var(--bs-light);
     border-color: var(--bs-primary);
-    color: var(--bs-light);
+    color: var(--bs-dark);
     box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* Button Group Styles */
+.btn-group .btn-outline-secondary {
+    color: var(--bs-secondary);
+    border-color: var(--bs-secondary);
+}
+
+.btn-group .btn-outline-secondary:hover,
+.btn-group .btn-outline-secondary.active {
+    background-color: var(--bs-secondary);
+    color: var(--bs-light);
 }

@@ -5,12 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Casey - Your AI Therapist Assistant</title>
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
 </head>
-<body data-bs-theme="dark">
+<body>
     <div class="container-fluid min-vh-100 d-flex flex-column">
         <header class="py-4 text-center">
+            <div class="logo-container mb-4">
+                <img src="{{ url_for('static', filename='images/CA Logo Ideogram 16.png') }}" 
+                     alt="Casey AI Logo" 
+                     class="logo img-fluid">
+            </div>
             <h1 class="display-4 mb-4">Casey - Your AI Therapist Assistant</h1>
             <div class="btn-group" role="group" aria-label="Interaction Mode">
                 <button class="btn btn-outline-secondary active" onclick="handleTabChange('voice')" id="voiceTab">
@@ -30,7 +36,7 @@
                     </div>
                     <div class="d-grid gap-2">
                         <button class="btn btn-primary btn-lg talk-button" id="talkButton">
-                            Press to Talk
+                            <i class="fas fa-microphone me-2"></i>Press to Talk
                         </button>
                     </div>
                 </div>
@@ -45,14 +51,15 @@
                                id="messageInput" 
                                placeholder="Type your message..." 
                                required>
-                        <button class="btn btn-primary" type="submit">Send</button>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-paper-plane me-2"></i>Send
+                        </button>
                     </form>
                 </div>
             </div>
         </main>
     </div>
 
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
