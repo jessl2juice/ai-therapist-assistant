@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Casey - Your AI Therapist Assistant</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
@@ -20,7 +21,12 @@
         <main>
             <div id="voiceTabContent">
                 <div id="conversationState" class="status-message">Conversation State: paused</div>
-                <button id="talkButton" class="talk-button">Press to Talk</button>
+                <div class="talk-container">
+                    <button id="talkButton" class="talk-button">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <div class="talk-label">Press to Talk</div>
+                </div>
             </div>
 
             <div id="textTabContent" style="display: none;">

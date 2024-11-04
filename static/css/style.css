@@ -52,20 +52,38 @@ h1 {
 }
 
 /* Voice interface */
+.talk-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
 .talk-button {
-    width: 100%;
-    padding: 30px;
-    font-size: 20px;
-    background-color: #e74c3c;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: #3498db;
     color: white;
     border: none;
-    border-radius: 8px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
     transition: background-color 0.3s;
 }
 
 .talk-button:hover {
-    background-color: #c0392b;
+    background-color: #2980b9;
+}
+
+.talk-button i {
+    font-size: 32px;
+}
+
+.talk-label {
+    margin-top: 10px;
+    color: #333;
+    font-size: 16px;
 }
 
 /* Status message */
