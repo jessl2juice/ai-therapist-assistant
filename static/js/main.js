@@ -192,7 +192,13 @@ function playAudioResponse(text) {
         talkButton.onclick = () => {
             if (window.speechSynthesis.speaking) {
                 window.speechSynthesis.cancel();
-                // Button appearance will be restored by onend handler
+                // Manually restore button appearance since onend might not fire
+                talkButton.classList.remove('btn-danger');
+                talkButton.classList.add('btn-primary');
+                talkButton.querySelector('i').classList.remove('fa-stop');
+                talkButton.querySelector('i').classList.add('fa-microphone');
+                buttonLabel.textContent = 'Press to Talk';
+                setConversationState('paused');
             }
         };
     }
