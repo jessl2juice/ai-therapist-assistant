@@ -12,6 +12,16 @@ body {
     line-height: 1.6;
 }
 
+/* Navbar customization */
+.navbar {
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand img {
+    margin-right: 0.5rem;
+}
+
 .container {
     max-width: 800px;
     margin: 0 auto;
