@@ -13,7 +13,7 @@ body {
 
 /* Logo Styles */
 .logo-container {
-    max-width: 180px;
+    max-width: 250px;  /* Increased from 180px */
     margin: 0 auto;
     padding: 1rem;
 }
@@ -104,16 +104,21 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #0d6efd !important; /* Bootstrap primary blue */
+    background-color: #0d6efd !important;
+    position: relative;
 }
 
 .talk-button i {
     font-size: 2.5rem;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
-.talk-label {
-    font-size: 1.1rem;
-    color: var(--bs-dark);
+/* Update button text style to not interfere with icon */
+.talk-button span {
+    display: none;
 }
 
 /* Stop Button Styles */
@@ -173,7 +178,7 @@ body {
 /* Responsive Design */
 @media (max-width: 768px) {
     .logo-container {
-        max-width: 140px;
+        max-width: 200px;  /* Increased from 140px */
         padding: 0.5rem;
     }
 
@@ -198,10 +203,6 @@ body {
     
     .talk-button i {
         font-size: 2rem;
-    }
-    
-    .talk-label {
-        font-size: 1rem;
     }
 
     .btn-group .btn {
