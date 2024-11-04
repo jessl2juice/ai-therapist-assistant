@@ -27,8 +27,9 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Initialize database
+# Initialize database with drop_all and create_all
 with app.app_context():
+    db.drop_all()
     db.create_all()
 
 @app.route('/login', methods=['GET', 'POST'])
