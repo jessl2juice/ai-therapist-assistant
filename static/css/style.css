@@ -12,9 +12,18 @@ body {
     line-height: 1.6;
 }
 
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.navbar-brand img {
+    margin-right: 8px;
+}
+
 .container {
     max-width: 800px;
-    margin: 0 auto;
+    margin: 20px auto;
     padding: 20px;
     position: relative;
 }
