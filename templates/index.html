@@ -1,77 +1,58 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Casey - Your AI Therapist Assistant</title>
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="/">Casey</a>
-            <div class="ms-auto">
-                <a href="/login" class="btn btn-outline-secondary me-2">Login</a>
-                <a href="/register" class="btn btn-primary">Register</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        <div class="welcome-section text-center py-5">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" 
-                 alt="Clinician Assist Logo" 
-                 class="mb-4" 
-                 width="150">
-            <h1 class="display-4 mb-3">Welcome to Casey</h1>
-            <h2 class="h4 mb-4 text-info">Your AI Therapist Assistant</h2>
-            <p class="text-muted mb-5">
-                A safe space to talk about your feelings and receive supportive guidance.<br>
-                Your conversations are private and secure.
-            </p>
-        </div>
-
-        <ul class="nav nav-tabs justify-content-center mb-4" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="voiceTab" onclick="handleTabChange('voice')">
-                    Voice Interaction
+<body data-bs-theme="dark">
+    <div class="container-fluid min-vh-100 d-flex flex-column">
+        <header class="py-4 text-center">
+            <h1 class="display-4 mb-4">Casey - Your AI Therapist Assistant</h1>
+            <div class="btn-group" role="group" aria-label="Interaction Mode">
+                <button class="btn btn-outline-secondary active" onclick="handleTabChange('voice')" id="voiceTab">
+                    <i class="fas fa-microphone me-2"></i>Voice
                 </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="textTab" onclick="handleTabChange('text')">
-                    Text Chat
+                <button class="btn btn-outline-secondary" onclick="handleTabChange('text')" id="textTab">
+                    <i class="fas fa-keyboard me-2"></i>Text
                 </button>
-            </li>
-        </ul>
-
-        <div class="tab-content py-4">
-            <div id="voiceTabContent" class="tab-pane">
-                <div id="conversationState" class="text-center mb-4 p-2 rounded">
-                    Conversation State: paused
-                </div>
-                <button class="talk-button" id="talkButton">Talk</button>
             </div>
+        </header>
 
-            <div id="textTabContent" class="tab-pane">
-                <div class="messages-container mb-4">
-                    <div id="messages" class="messages rounded"></div>
+        <main class="flex-grow-1 d-flex flex-column">
+            <div class="container py-4">
+                <div id="voiceTabContent" class="interaction-container">
+                    <div id="conversationState" class="alert alert-info text-center mb-4">
+                        Conversation State: paused
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary btn-lg talk-button" id="talkButton">
+                            Press to Talk
+                        </button>
+                    </div>
                 </div>
-                <form id="textForm" class="input-group">
-                    <input type="text" 
-                           class="form-control" 
-                           id="messageInput" 
-                           placeholder="Type your message..." 
-                           required>
-                    <button class="btn btn-primary" type="submit">Send</button>
-                </form>
+
+                <div id="textTabContent" class="interaction-container" style="display: none;">
+                    <div class="messages-container mb-4">
+                        <div id="messages" class="messages p-3 rounded"></div>
+                    </div>
+                    <form id="textForm" class="input-group">
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               id="messageInput" 
+                               placeholder="Type your message..." 
+                               required>
+                        <button class="btn btn-primary" type="submit">Send</button>
+                    </form>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
