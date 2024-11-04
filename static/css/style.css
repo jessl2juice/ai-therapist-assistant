@@ -1,31 +1,101 @@
-.messages {
-    max-height: 400px;
-    overflow-y: auto;
-    background-color: var(--bs-dark);
+/* Global Styles */
+body {
+    background: var(--bs-dark);
+    color: var(--bs-light);
 }
 
+/* Messages Container */
+.messages-container {
+    height: calc(100vh - 300px);
+    min-height: 400px;
+}
+
+.messages {
+    height: 100%;
+    overflow-y: auto;
+    background: var(--bs-dark);
+    border: 1px solid var(--bs-secondary);
+}
+
+/* Message Styles */
 .user-message, .casey-message {
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 5px;
+    padding: 1rem;
+    margin: 0.5rem;
+    border-radius: 0.5rem;
+    max-width: 80%;
 }
 
 .user-message {
     background-color: var(--bs-primary);
-    margin-left: 20%;
+    margin-left: auto;
 }
 
 .casey-message {
     background-color: var(--bs-secondary);
-    margin-right: 20%;
+    margin-right: auto;
 }
 
-#talkButton {
-    height: 100px;
+/* Talk Button Styles */
+.talk-button {
+    height: 120px;
     font-size: 1.5rem;
+    border-radius: 1rem;
+    transition: all 0.3s ease;
 }
 
+.talk-button:active {
+    transform: scale(0.98);
+}
+
+.talk-button.recording {
+    animation: pulse 1.5s infinite;
+}
+
+/* Conversation State */
 #conversationState {
-    text-align: center;
-    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    border-radius: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .messages-container {
+        height: calc(100vh - 250px);
+    }
+
+    .user-message, .casey-message {
+        max-width: 90%;
+    }
+
+    .talk-button {
+        height: 100px;
+        font-size: 1.25rem;
+    }
+}
+
+/* Animation */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(var(--bs-danger-rgb), 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(var(--bs-danger-rgb), 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(var(--bs-danger-rgb), 0);
+    }
+}
+
+/* Input Styles */
+.form-control {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-secondary);
+    color: var(--bs-light);
+}
+
+.form-control:focus {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-primary);
+    color: var(--bs-light);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
 }

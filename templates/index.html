@@ -9,31 +9,50 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body data-bs-theme="dark">
-    <div class="container">
-        <header class="text-center py-4">
-            <h1>Casey - Your AI Therapist Assistant</h1>
+    <div class="container-fluid min-vh-100 d-flex flex-column">
+        <header class="py-4 text-center">
+            <h1 class="display-4 mb-4">Casey - Your AI Therapist Assistant</h1>
             <div class="btn-group" role="group" aria-label="Interaction Mode">
-                <button class="btn btn-secondary active" onclick="handleTabChange('voice')" id="voiceTab">Voice</button>
-                <button class="btn btn-secondary" onclick="handleTabChange('text')" id="textTab">Text</button>
+                <button class="btn btn-outline-secondary active" onclick="handleTabChange('voice')" id="voiceTab">
+                    <i class="fas fa-microphone me-2"></i>Voice
+                </button>
+                <button class="btn btn-outline-secondary" onclick="handleTabChange('text')" id="textTab">
+                    <i class="fas fa-keyboard me-2"></i>Text
+                </button>
             </div>
         </header>
 
-        <main class="mt-4">
-            <div id="voiceTabContent">
-                <div class="alert alert-info" id="conversationState">Conversation State: paused</div>
-                <button class="btn btn-danger btn-lg w-100" id="talkButton">Press to Talk</button>
-            </div>
+        <main class="flex-grow-1 d-flex flex-column">
+            <div class="container py-4">
+                <div id="voiceTabContent" class="interaction-container">
+                    <div id="conversationState" class="alert alert-info text-center mb-4">
+                        Conversation State: paused
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary btn-lg talk-button" id="talkButton">
+                            Press to Talk
+                        </button>
+                    </div>
+                </div>
 
-            <div id="textTabContent" style="display: none;">
-                <div class="messages card p-3 mb-3" id="messages"></div>
-                <form id="textForm" class="input-group">
-                    <input type="text" class="form-control" id="messageInput" placeholder="Type your message..." required>
-                    <button class="btn btn-primary" type="submit">Send</button>
-                </form>
+                <div id="textTabContent" class="interaction-container" style="display: none;">
+                    <div class="messages-container mb-4">
+                        <div id="messages" class="messages p-3 rounded"></div>
+                    </div>
+                    <form id="textForm" class="input-group">
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               id="messageInput" 
+                               placeholder="Type your message..." 
+                               required>
+                        <button class="btn btn-primary" type="submit">Send</button>
+                    </form>
+                </div>
             </div>
         </main>
     </div>
 
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
