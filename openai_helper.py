@@ -1,7 +1,9 @@
 import os
 import logging
 import time
-from typing import Optional
+import base64
+import json
+from typing import Optional, Union, Dict
 from openai import OpenAI, APIError, RateLimitError, APIConnectionError
 
 # Configure logging
@@ -15,6 +17,8 @@ logger = logging.getLogger(__name__)
 MAX_RETRIES = 3
 RETRY_DELAY = 1  # seconds
 MAX_TOKENS = 150
+MAX_AUDIO_SIZE = 25 * 1024 * 1024  # 25MB max size for audio
+CHUNK_SIZE = 16000  # Sample rate for audio chunking
 
 class OpenAIHelper:
     def __init__(self):
@@ -35,6 +39,39 @@ Important notes:
 - Do not prescribe medications or treatments
 - If users express thoughts of self-harm, direct them to professional help
 - Keep responses focused on emotional support and understanding"""
+
+    def _validate_audio_data(self, audio_data: str) -> bytes:
+        """Validate and preprocess audio data"""
+        try:
+            # Remove data URL prefix if present
+            if 'base64,' in audio_data:
+                audio_data = audio_data.split('base64,')[1]
+            
+            # Decode base64 data
+            decoded_data = base64.b64decode(audio_data)
+            
+            # Check size
+            if len(decoded_data) > MAX_AUDIO_SIZE:
+                raise ValueError(f"Audio file size exceeds maximum limit of {MAX_AUDIO_SIZE/1024/1024}MB")
+            
+            return decoded_data
+        except Exception as e:
+            logger.error(f"Audio validation error: {str(e)}")
+            raise ValueError(f"Invalid audio data: {str(e)}")
+
+    def _transcribe_audio(self, audio_data: bytes) -> str:
+        """Transcribe audio data to text"""
+        try:
+            # Create a temporary file for the audio
+            response = self.client.audio.transcriptions.create(
+                model="whisper-1",
+                file=("audio.webm", audio_data, "audio/webm"),
+                response_format="text"
+            )
+            return response
+        except Exception as e:
+            logger.error(f"Transcription error: {str(e)}")
+            raise ValueError(f"Failed to transcribe audio: {str(e)}")
 
     def _make_api_call(self, input_text: str, retries: int = MAX_RETRIES) -> Optional[str]:
         """Make API call with retry logic"""
@@ -66,6 +103,11 @@ Important notes:
                 raise
 
             except APIError as e:
+                if "context_length_exceeded" in str(e):
+                    # Handle context length exceeded error
+                    logger.warning("Context length exceeded, truncating input")
+                    input_text = input_text[:len(input_text)//2]  # Simple truncation strategy
+                    continue
                 logger.error(f"OpenAI API error: {str(e)}")
                 raise
 
@@ -73,11 +115,20 @@ Important notes:
                 logger.error(f"Unexpected error: {str(e)}")
                 raise
 
-    def get_ai_response(self, input_text: str, modality: str) -> str:
+    def get_ai_response(self, input_data: Union[str, bytes], modality: str) -> str:
         """Get AI response with error handling and logging"""
         try:
-            if not input_text or not isinstance(input_text, str):
-                raise ValueError("Invalid input: Input text must be a non-empty string")
+            if modality == 'audio':
+                logger.info("Processing audio input")
+                # Validate and preprocess audio data
+                audio_data = self._validate_audio_data(input_data)
+                # Transcribe audio to text
+                input_text = self._transcribe_audio(audio_data)
+                logger.info("Audio transcribed successfully")
+            else:
+                if not input_data or not isinstance(input_data, str):
+                    raise ValueError("Invalid input: Input text must be a non-empty string")
+                input_text = input_data
 
             logger.info(f"Processing {modality} input")
             response = self._make_api_call(input_text)
@@ -91,7 +142,7 @@ Important notes:
         except ValueError as e:
             error_msg = f"Input validation error: {str(e)}"
             logger.error(error_msg)
-            return "I apologize, but I couldn't understand your input. Please try again with a clear message."
+            return f"I apologize, but I couldn't process your {modality} input. {str(e)}"
 
         except RateLimitError:
             error_msg = "The service is currently experiencing high demand. Please try again in a moment."
@@ -103,9 +154,12 @@ Important notes:
             logger.error(error_msg)
             return error_msg
 
-        except APIError:
-            error_msg = "I'm experiencing technical difficulties. Please try again later."
-            logger.error(error_msg)
+        except APIError as e:
+            if "context_length_exceeded" in str(e):
+                error_msg = "Your message was too long. Please try a shorter message."
+            else:
+                error_msg = "I'm experiencing technical difficulties. Please try again later."
+            logger.error(f"OpenAI API error: {str(e)}")
             return error_msg
 
         except Exception as e:
@@ -117,5 +171,5 @@ Important notes:
 ai_helper = OpenAIHelper()
 
 # Export the get_ai_response function for compatibility
-def get_ai_response(input_text: str, modality: str) -> str:
-    return ai_helper.get_ai_response(input_text, modality)
+def get_ai_response(input_data: Union[str, bytes], modality: str) -> str:
+    return ai_helper.get_ai_response(input_data, modality)

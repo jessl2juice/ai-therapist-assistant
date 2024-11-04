@@ -3,6 +3,7 @@ let currentTab = 'voice';
 let isRecording = false;
 let mediaRecorder;
 let audioChunks = [];
+const MAX_CHUNK_SIZE = 1024 * 1024; // 1MB chunks
 
 // Socket event handlers
 socket.on('connect', () => {
@@ -61,24 +62,31 @@ function handleTabChange(selectedTab) {
     document.getElementById(`${selectedTab}Tab`).classList.add('active');
 }
 
-async function handlePressToTalk() {
-    if (isRecording) {
-        stopRecording();
-    } else {
-        startRecording();
-    }
-}
-
 async function startRecording() {
     try {
         setConversationState('user talking');
         isRecording = true;
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                channelCount: 1,
+                sampleRate: 16000
+            } 
+        });
+
+        mediaRecorder = new MediaRecorder(stream, {
+            mimeType: 'audio/webm;codecs=opus',
+            audioBitsPerSecond: 32000
+        });
         
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
                 audioChunks.push(event.data);
+                // Check if we need to send chunks (for long recordings)
+                if (getTotalSize(audioChunks) > MAX_CHUNK_SIZE) {
+                    sendAudioChunk();
+                }
             }
         };
         
@@ -89,13 +97,46 @@ async function startRecording() {
             stopRecording();
         };
 
-        mediaRecorder.start();
+        // Start recording with smaller time slices for better streaming
+        mediaRecorder.start(1000);
         updateTalkButton(true);
     } catch (err) {
         console.error('Error accessing microphone:', err);
         addSystemMessage('error', 'Unable to access microphone. Please check permissions.');
         stopRecording();
     }
+}
+
+function getTotalSize(chunks) {
+    return chunks.reduce((total, chunk) => total + chunk.size, 0);
+}
+
+async function sendAudioChunk() {
+    if (audioChunks.length === 0) return;
+
+    try {
+        const chunk = new Blob(audioChunks, { type: 'audio/webm' });
+        audioChunks = []; // Clear chunks after sending
+        
+        const base64data = await blobToBase64(chunk);
+        socket.emit('audio', { 
+            audio: base64data,
+            modality: 'audio',
+            isChunk: true
+        });
+    } catch (error) {
+        console.error('Error sending audio chunk:', error);
+        addSystemMessage('error', 'Error sending audio data. Please try again.');
+    }
+}
+
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
 }
 
 function stopRecording() {
@@ -125,27 +166,25 @@ function updateTalkButton(isRecording) {
     }
 }
 
-function sendAudioToServer() {
+async function sendAudioToServer() {
     if (audioChunks.length === 0) {
         addSystemMessage('error', 'No audio recorded. Please try again.');
         return;
     }
 
-    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-    audioChunks = [];
-    
-    // Convert blob to base64 and send to server
-    const reader = new FileReader();
-    reader.onloadend = () => {
+    try {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        audioChunks = [];
+        
+        const base64data = await blobToBase64(audioBlob);
         socket.emit('audio', { 
-            audio: reader.result,
+            audio: base64data,
             modality: 'audio'
         });
-    };
-    reader.onerror = () => {
+    } catch (error) {
+        console.error('Error processing audio:', error);
         addSystemMessage('error', 'Error processing audio. Please try again.');
-    };
-    reader.readAsDataURL(audioBlob);
+    }
 }
 
 function playAudioResponse(text) {
@@ -216,8 +255,8 @@ function setConversationState(state) {
 }
 
 // Event Listeners
-document.getElementById('talkButton').addEventListener('mousedown', handlePressToTalk);
-document.getElementById('talkButton').addEventListener('mouseup', handlePressToTalk);
+document.getElementById('talkButton').addEventListener('mousedown', startRecording);
+document.getElementById('talkButton').addEventListener('mouseup', stopRecording);
 document.getElementById('textForm').addEventListener('submit', handleTextSubmit);
 
 // Initialize the default tab
