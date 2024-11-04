@@ -78,5 +78,175 @@ function handleTabChange(selectedTab) {
     if (textTab) textTab.classList.toggle('active', selectedTab === 'text');
 }
 
-// Rest of the JavaScript code remains the same...
-[Previous JavaScript code for audio handling and other functionality]
+async function startRecording() {
+    try {
+        console.log('Starting audio recording');
+        setConversationState('user talking');
+        isRecording = true;
+        audioChunks = [];
+
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                channelCount: 1,
+                sampleRate: 16000
+            } 
+        });
+
+        mediaRecorder = new MediaRecorder(stream, {
+            mimeType: 'audio/webm;codecs=opus',
+            audioBitsPerSecond: 32000
+        });
+        
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                audioChunks.push(event.data);
+                if (getTotalSize(audioChunks) > MAX_CHUNK_SIZE) {
+                    console.log('Chunk size exceeded, sending partial audio');
+                    sendAudioChunk();
+                }
+            }
+        };
+        
+        mediaRecorder.onstop = sendAudioToServer;
+        mediaRecorder.start(1000);
+        updateTalkButton(true);
+        
+    } catch (err) {
+        console.error('Error accessing microphone:', err);
+        addSystemMessage('error', 'Unable to access microphone. Please check permissions.');
+        stopRecording();
+    }
+}
+
+function stopRecording() {
+    console.log('Stopping recording');
+    if (mediaRecorder && isRecording) {
+        setConversationState('Casey thinking');
+        isRecording = false;
+        mediaRecorder.stop();
+        updateTalkButton(false);
+        
+        if (mediaRecorder.stream) {
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        }
+    }
+}
+
+function updateTalkButton(isRecording) {
+    const button = document.getElementById('talkButton');
+    if (button) {
+        button.textContent = isRecording ? 'Release' : 'Talk';
+    }
+}
+
+function getTotalSize(chunks) {
+    return chunks.reduce((total, chunk) => total + chunk.size, 0);
+}
+
+function sendAudioChunk() {
+    if (audioChunks.length === 0) return;
+
+    const chunk = new Blob(audioChunks, { type: 'audio/webm' });
+    audioChunks = [];
+
+    const reader = new FileReader();
+    reader.readAsDataURL(chunk);
+    reader.onloadend = () => {
+        socket.emit('audio', { 
+            audio: reader.result,
+            modality: 'audio',
+            isChunk: true
+        });
+    };
+}
+
+function sendAudioToServer() {
+    if (audioChunks.length === 0) {
+        console.warn('No audio recorded');
+        return;
+    }
+
+    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+    audioChunks = [];
+
+    const reader = new FileReader();
+    reader.readAsDataURL(audioBlob);
+    reader.onloadend = () => {
+        socket.emit('audio', { 
+            audio: reader.result,
+            modality: 'audio'
+        });
+    };
+}
+
+function playAudioResponse(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+    }
+}
+
+function handleTextSubmit(event) {
+    event.preventDefault();
+    const messageInput = document.getElementById('messageInput');
+    const userMessage = messageInput.value.trim();
+    
+    if (userMessage) {
+        addMessage('User', userMessage);
+        socket.emit('message', {
+            message: userMessage,
+            modality: 'text'
+        });
+        messageInput.value = '';
+        setConversationState('Casey thinking');
+    }
+}
+
+function addMessage(sender, text) {
+    const messagesDiv = document.getElementById('messages');
+    if (messagesDiv) {
+        const messageElement = document.createElement('div');
+        messageElement.className = sender === 'User' ? 'user-message' : 'casey-message';
+        messageElement.innerHTML = `<strong>${sender}:</strong> ${text}`;
+        messagesDiv.appendChild(messageElement);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+}
+
+function addSystemMessage(type, message) {
+    const messagesDiv = document.getElementById('messages');
+    if (messagesDiv) {
+        const messageElement = document.createElement('div');
+        messageElement.className = `alert alert-${type} my-2`;
+        messageElement.textContent = message;
+        messagesDiv.appendChild(messageElement);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+}
+
+function setConversationState(state) {
+    const stateElement = document.getElementById('conversationState');
+    if (stateElement) {
+        const states = {
+            'paused': 'alert-info',
+            'user talking': 'alert-primary',
+            'Casey thinking': 'alert-warning',
+            'Casey speaking': 'alert-success',
+            'error': 'alert-danger'
+        };
+        
+        stateElement.className = `alert ${states[state] || 'alert-info'}`;
+        stateElement.innerText = `Conversation State: ${state}`;
+    }
+}
+
+// Initialize the default tab
+handleTabChange('voice');
+
+// Event Listeners
+document.getElementById('talkButton').addEventListener('mousedown', startRecording);
+document.getElementById('talkButton').addEventListener('mouseup', stopRecording);
+document.getElementById('textForm').addEventListener('submit', handleTextSubmit);
