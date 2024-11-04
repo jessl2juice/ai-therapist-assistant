@@ -12,6 +12,8 @@ let voiceSettings = {
     pitch: 1.0,
     volume: 1.0
 };
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 3;
 
 // Load saved voice settings
 function loadVoiceSettings() {
@@ -91,22 +93,31 @@ function initVoiceSettings() {
 // Socket event listeners
 socket.on('connect', () => {
     console.log('Connected to server');
+    reconnectAttempts = 0;
 });
 
 socket.on('disconnect', () => {
     console.log('Disconnected from server');
-    if (document.getElementById('conversationState').textContent === 'Conversation State: Casey thinking') {
-        setConversationState('error: Connection lost. Please try again.');
-        updateTalkButton(false);
+    if (reconnectAttempts < maxReconnectAttempts) {
+        reconnectAttempts++;
+        setTimeout(() => {
+            socket.connect();
+        }, 1000 * reconnectAttempts);
+    } else {
+        setConversationState('error: Connection lost. Please refresh the page');
     }
 });
 
 socket.on('connect_error', (error) => {
     console.error('Connection error:', error);
-    if (document.getElementById('conversationState').textContent === 'Conversation State: Casey thinking') {
-        setConversationState('error: Connection error. Please try again.');
-        updateTalkButton(false);
-    }
+    setConversationState('error: Please refresh the page to reconnect');
+    updateTalkButton(false);
+});
+
+socket.on('error', (error) => {
+    console.error('Socket error:', error);
+    setConversationState('error: Connection error. Please try again');
+    updateTalkButton(false);
 });
 
 socket.on('response', (data) => {
@@ -117,11 +128,6 @@ socket.on('response', (data) => {
         }
     }
     setConversationState('paused');
-});
-
-socket.on('error', (data) => {
-    console.error('Server error:', data.message);
-    setConversationState('error: ' + data.message);
 });
 
 // Tab handling
@@ -149,29 +155,31 @@ function handleTabChange(selectedTab) {
 }
 
 // Voice handling
-async function startRecording() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                audioChunks.push(event.data);
-            }
-        };
-        
-        mediaRecorder.onstop = sendAudioToAPI;
-        
-        mediaRecorder.start();
-        isRecording = true;
-        setConversationState('user talking');
-        updateTalkButton(true);
-        
-    } catch (error) {
-        console.error('Error accessing microphone:', error);
-        setConversationState('error: ' + error.message);
-        updateTalkButton(false);
+function startRecording() {
+    if (isRecording) {
+        stopRecording();
     }
+    
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                }
+            };
+            mediaRecorder.onstop = sendAudioToAPI;
+            mediaRecorder.start();
+            isRecording = true;
+            setConversationState('user talking');
+            updateTalkButton(true);
+        })
+        .catch(error => {
+            console.error('Error accessing microphone:', error);
+            setConversationState('error: ' + error.message);
+            updateTalkButton(false);
+            isRecording = false;
+        });
 }
 
 function stopRecording() {
@@ -264,20 +272,21 @@ function setConversationState(state) {
     const stateElement = document.getElementById('conversationState');
     stateElement.textContent = `Conversation State: ${state}`;
     
-    // Clear any existing timeouts
     if (window.stateTimeout) {
         clearTimeout(window.stateTimeout);
     }
     
-    // Set timeout for stuck states
     if (state === 'user talking' || state === 'Casey thinking') {
         window.stateTimeout = setTimeout(() => {
             if (stateElement.textContent === `Conversation State: ${state}`) {
+                if (isRecording) {
+                    stopRecording();
+                }
                 isRecording = false;
                 updateTalkButton(false);
-                setConversationState('error: Operation timed out. Please try again.');
+                setConversationState('error: Operation timed out. Click to try again');
             }
-        }, 10000); // 10 second timeout
+        }, 15000); // Increased timeout to 15 seconds
     }
     
     stateElement.className = 'alert ' + (
