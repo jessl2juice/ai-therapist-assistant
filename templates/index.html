@@ -34,44 +34,37 @@
             </p>
         </div>
 
-        <div class="row justify-content-center g-4">
-            <div class="col-md-6">
-                <div class="card shadow-sm">
-                    <div class="card-body p-4">
-                        <h3 class="h4 text-center mb-4">Voice Interaction</h3>
-                        <div id="voiceTabContent" class="interaction-container">
-                            <div id="conversationState" class="text-center mb-4">
-                                Conversation State: paused
-                            </div>
-                            <div class="d-grid">
-                                <button class="btn btn-lg talk-button" id="talkButton">
-                                    Press to Talk
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+        <ul class="nav nav-tabs justify-content-center" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="voiceTab" onclick="handleTabChange('voice')">Voice Interaction</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="textTab" onclick="handleTabChange('text')">Text Chat</button>
+            </li>
+        </ul>
+
+        <div class="tab-content py-4">
+            <div id="voiceTabContent" class="tab-pane fade show active">
+                <div id="conversationState" class="text-center mb-4">
+                    Conversation State: paused
                 </div>
+                <button class="talk-button" id="talkButton">
+                    Press to Talk
+                </button>
             </div>
 
-            <div class="col-md-6">
-                <div class="card shadow-sm">
-                    <div class="card-body p-4">
-                        <h3 class="h4 text-center mb-4">Text Chat</h3>
-                        <div id="textTabContent" class="interaction-container" style="display: none;">
-                            <div class="messages-container mb-4">
-                                <div id="messages" class="messages rounded"></div>
-                            </div>
-                            <form id="textForm" class="input-group">
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="messageInput" 
-                                       placeholder="Type your message..." 
-                                       required>
-                                <button class="btn btn-primary" type="submit">Send</button>
-                            </form>
-                        </div>
-                    </div>
+            <div id="textTabContent" class="tab-pane fade" style="display: none;">
+                <div class="messages-container mb-4">
+                    <div id="messages" class="messages rounded"></div>
                 </div>
+                <form id="textForm" class="input-group">
+                    <input type="text" 
+                           class="form-control" 
+                           id="messageInput" 
+                           placeholder="Type your message..." 
+                           required>
+                    <button class="btn btn-primary" type="submit">Send</button>
+                </form>
             </div>
         </div>
     </div>
