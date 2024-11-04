@@ -94,18 +94,15 @@ function initVoiceSettings() {
 socket.on('connect', () => {
     console.log('Connected to server');
     reconnectAttempts = 0;
+    setConversationState('paused');  // Reset state on reconnect
 });
 
 socket.on('disconnect', () => {
     console.log('Disconnected from server');
-    if (reconnectAttempts < maxReconnectAttempts) {
-        reconnectAttempts++;
-        setTimeout(() => {
-            socket.connect();
-        }, 1000 * reconnectAttempts);
-    } else {
-        setConversationState('error: Connection lost. Please refresh the page');
+    if (isRecording) {
+        stopRecording();
     }
+    setConversationState('error: Connection lost. Trying to reconnect...');
 });
 
 socket.on('connect_error', (error) => {
@@ -118,6 +115,15 @@ socket.on('error', (error) => {
     console.error('Socket error:', error);
     setConversationState('error: Connection error. Please try again');
     updateTalkButton(false);
+});
+
+// Add error handler for unhandled rejections
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled rejection:', event.reason);
+    if (isRecording) {
+        stopRecording();
+    }
+    setConversationState('error: Something went wrong. Please try again.');
 });
 
 socket.on('response', (data) => {
@@ -134,17 +140,14 @@ socket.on('response', (data) => {
 function handleTabChange(selectedTab) {
     currentTab = selectedTab;
     
-    // Update UI elements
     document.getElementById('voiceTabContent').style.display = selectedTab === 'voice' ? 'block' : 'none';
     document.getElementById('textTabContent').style.display = selectedTab === 'text' ? 'block' : 'none';
     
-    // Update button states
     document.querySelectorAll('.btn-group .btn').forEach(btn => {
         btn.classList.remove('active');
     });
     document.getElementById(selectedTab + 'Tab').classList.add('active');
     
-    // Reset states
     if (isRecording) {
         stopRecording();
     }
@@ -168,7 +171,13 @@ function startRecording() {
                     audioChunks.push(event.data);
                 }
             };
-            mediaRecorder.onstop = sendAudioToAPI;
+            mediaRecorder.onstop = () => {
+                sendAudioToAPI()
+                    .catch(error => {
+                        console.error('Error in sendAudioToAPI:', error);
+                        setConversationState('error: Failed to process audio. Please try again.');
+                    });
+            };
             mediaRecorder.start();
             isRecording = true;
             setConversationState('user talking');
@@ -182,16 +191,17 @@ function startRecording() {
         });
 }
 
-function stopRecording() {
+async function stopRecording() {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         try {
             mediaRecorder.stop();
+            await new Promise(resolve => mediaRecorder.onstop = resolve);
+            await sendAudioToAPI();
             mediaRecorder.stream.getTracks().forEach(track => track.stop());
             isRecording = false;
             updateTalkButton(false);
         } catch (error) {
-            console.error('Error stopping recording:', error);
-            // Force reset state
+            console.error('Error in stopRecording:', error);
             isRecording = false;
             updateTalkButton(false);
             setConversationState('error: Recording failed. Please try again.');
@@ -217,28 +227,34 @@ function updateTalkButton(isRecording) {
 }
 
 function sendAudioToAPI() {
-    try {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        audioChunks = [];
-        
-        const reader = new FileReader();
-        reader.onload = () => {
-            const base64Audio = reader.result.split(',')[1];
-            socket.emit('audio', { audio: base64Audio });
-            setConversationState('Casey thinking');
-        };
-        
-        reader.onerror = () => {
-            setConversationState('error: Failed to process audio. Please try again.');
+    return new Promise((resolve, reject) => {
+        try {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            audioChunks = [];
+            
+            const reader = new FileReader();
+            reader.onload = () => {
+                const base64Audio = reader.result.split(',')[1];
+                socket.emit('audio', { audio: base64Audio });
+                setConversationState('Casey thinking');
+                resolve();
+            };
+            
+            reader.onerror = (error) => {
+                console.error('FileReader error:', error);
+                setConversationState('error: Failed to process audio. Please try again.');
+                updateTalkButton(false);
+                reject(error);
+            };
+            
+            reader.readAsDataURL(audioBlob);
+        } catch (error) {
+            console.error('Error sending audio:', error);
+            setConversationState('error: Failed to send audio. Please try again.');
             updateTalkButton(false);
-        };
-        
-        reader.readAsDataURL(audioBlob);
-    } catch (error) {
-        console.error('Error sending audio:', error);
-        setConversationState('error: Failed to send audio. Please try again.');
-        updateTalkButton(false);
-    }
+            reject(error);
+        }
+    });
 }
 
 // Text handling
@@ -300,12 +316,10 @@ function setConversationState(state) {
 
 function playAudioResponse(text) {
     if ('speechSynthesis' in window) {
-        // Cancel any ongoing speech
         window.speechSynthesis.cancel();
         
         const utterance = new SpeechSynthesisUtterance(text);
         
-        // Apply voice settings
         if (voiceSettings.voice) {
             utterance.voice = voiceSettings.voice;
         }
@@ -328,7 +342,6 @@ function playAudioResponse(text) {
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
     const talkButton = document.getElementById('talkButton');
-    let pressTimer = null;
     
     talkButton.addEventListener('mousedown', () => {
         if (window.speechSynthesis.speaking) {
@@ -349,7 +362,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Force state reset if mouse leaves button while recording
     talkButton.addEventListener('mouseleave', () => {
         if (isRecording) {
             stopRecording();
@@ -357,7 +369,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Add touchstart/touchend for mobile devices
     talkButton.addEventListener('touchstart', (e) => {
         e.preventDefault();
         if (!window.speechSynthesis.speaking && !isRecording) {
@@ -375,9 +386,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('textForm').addEventListener('submit', handleTextSubmit);
     
-    // Initialize voice settings
     initVoiceSettings();
-    
-    // Initialize default tab
     handleTabChange('voice');
 });
