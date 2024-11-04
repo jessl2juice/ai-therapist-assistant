@@ -1,10 +1,11 @@
 import os
 import logging
 from flask import Flask, render_template, flash, redirect, url_for, request
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, disconnect
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from flask_migrate import Migrate
+from flask_cors import CORS
 from openai_helper import get_ai_response
 
 # Configure logging
@@ -21,7 +22,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize extensions
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-socketio = SocketIO(app)
+CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*", manage_session=True)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
@@ -72,9 +74,24 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@socketio.on('connect')
+def handle_connect():
+    if not current_user.is_authenticated:
+        logger.warning("Unauthorized connection attempt")
+        return False
+    logger.info(f"Client connected: {current_user.username}")
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    if current_user.is_authenticated:
+        logger.info(f"Client disconnected: {current_user.username}")
+
 @socketio.on('message')
-@login_required
 def handle_message(data):
+    if not current_user.is_authenticated:
+        logger.warning("Unauthorized message attempt")
+        return
+    
     try:
         user_message = data.get('message', '')
         modality = data.get('modality', 'text')
@@ -98,8 +115,11 @@ def handle_message(data):
         emit('error', {'message': "An error occurred while processing your message"})
 
 @socketio.on('audio')
-@login_required
 def handle_audio(data):
+    if not current_user.is_authenticated:
+        logger.warning("Unauthorized audio attempt")
+        return
+    
     try:
         audio_data = data.get('audio')
         if not audio_data:
