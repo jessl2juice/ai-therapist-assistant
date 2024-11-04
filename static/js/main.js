@@ -4,6 +4,7 @@ let isRecording = false;
 let mediaRecorder;
 let audioChunks = [];
 const MAX_CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+const SOCKET_TIMEOUT = 30000; // 30 seconds timeout
 
 // Socket event handlers
 socket.on('connect', () => {
@@ -21,24 +22,32 @@ socket.on('connect_error', (error) => {
     setConnectionStatus('error');
 });
 
+// Enhanced response handler with debug logging
 socket.on('response', (data) => {
+    console.log('Received response from server:', data);
+    
     if (data.type === 'therapist_response') {
         addMessage('Casey', data.content);
         setConversationState('paused');
+        
         if (currentTab === 'voice') {
+            console.log('Playing audio response for voice interaction');
             playAudioResponse(data.content);
         }
+    } else {
+        console.warn('Unexpected response type:', data.type);
     }
 });
 
 socket.on('error', (data) => {
-    console.error('Error:', data.message);
+    console.error('Server error:', data.message);
     const errorMessage = data.message || 'An unexpected error occurred. Please try again.';
     addSystemMessage('error', errorMessage);
     setConversationState('error');
 });
 
 function setConnectionStatus(status) {
+    console.log('Connection status changed:', status);
     const statusMessages = {
         connected: 'Connected to server',
         disconnected: 'Disconnected from server. Trying to reconnect...',
@@ -51,11 +60,11 @@ function setConnectionStatus(status) {
 }
 
 function handleTabChange(selectedTab) {
+    console.log('Switching to tab:', selectedTab);
     currentTab = selectedTab;
     document.getElementById('voiceTabContent').style.display = selectedTab === 'voice' ? 'block' : 'none';
     document.getElementById('textTabContent').style.display = selectedTab === 'text' ? 'block' : 'none';
     
-    // Update active state of tab buttons
     document.querySelectorAll('.btn-group button').forEach(btn => {
         btn.classList.remove('active');
     });
@@ -64,6 +73,7 @@ function handleTabChange(selectedTab) {
 
 async function startRecording() {
     try {
+        console.log('Starting audio recording');
         setConversationState('user talking');
         isRecording = true;
         audioChunks = [];
@@ -82,9 +92,10 @@ async function startRecording() {
         
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
+                console.log('Received audio chunk:', event.data.size, 'bytes');
                 audioChunks.push(event.data);
-                // Check if we need to send chunks (for long recordings)
                 if (getTotalSize(audioChunks) > MAX_CHUNK_SIZE) {
+                    console.log('Chunk size exceeded, sending partial audio');
                     sendAudioChunk();
                 }
             }
@@ -97,9 +108,9 @@ async function startRecording() {
             stopRecording();
         };
 
-        // Start recording with smaller time slices for better streaming
         mediaRecorder.start(1000);
         updateTalkButton(true);
+        console.log('Recording started successfully');
     } catch (err) {
         console.error('Error accessing microphone:', err);
         addSystemMessage('error', 'Unable to access microphone. Please check permissions.');
@@ -116,14 +127,27 @@ async function sendAudioChunk() {
 
     try {
         const chunk = new Blob(audioChunks, { type: 'audio/webm' });
+        console.log('Sending audio chunk:', chunk.size, 'bytes');
         audioChunks = []; // Clear chunks after sending
         
         const base64data = await blobToBase64(chunk);
-        socket.emit('audio', { 
-            audio: base64data,
-            modality: 'audio',
-            isChunk: true
+        const emitPromise = new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                reject(new Error('Socket timeout'));
+            }, SOCKET_TIMEOUT);
+
+            socket.emit('audio', { 
+                audio: base64data,
+                modality: 'audio',
+                isChunk: true
+            }, (response) => {
+                clearTimeout(timeout);
+                resolve(response);
+            });
         });
+
+        await emitPromise;
+        console.log('Audio chunk sent successfully');
     } catch (error) {
         console.error('Error sending audio chunk:', error);
         addSystemMessage('error', 'Error sending audio data. Please try again.');
@@ -134,19 +158,22 @@ function blobToBase64(blob) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
+        reader.onerror = (error) => {
+            console.error('Error converting blob to base64:', error);
+            reject(error);
+        };
         reader.readAsDataURL(blob);
     });
 }
 
 function stopRecording() {
+    console.log('Stopping recording');
     if (mediaRecorder && isRecording) {
         setConversationState('Casey thinking');
         isRecording = false;
         mediaRecorder.stop();
         updateTalkButton(false);
         
-        // Clean up media stream
         if (mediaRecorder.stream) {
             mediaRecorder.stream.getTracks().forEach(track => track.stop());
         }
@@ -168,19 +195,33 @@ function updateTalkButton(isRecording) {
 
 async function sendAudioToServer() {
     if (audioChunks.length === 0) {
+        console.warn('No audio recorded');
         addSystemMessage('error', 'No audio recorded. Please try again.');
         return;
     }
 
     try {
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        console.log('Preparing to send audio:', audioBlob.size, 'bytes');
         audioChunks = [];
         
         const base64data = await blobToBase64(audioBlob);
-        socket.emit('audio', { 
-            audio: base64data,
-            modality: 'audio'
+        const emitPromise = new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                reject(new Error('Socket timeout'));
+            }, SOCKET_TIMEOUT);
+
+            socket.emit('audio', { 
+                audio: base64data,
+                modality: 'audio'
+            }, (response) => {
+                clearTimeout(timeout);
+                resolve(response);
+            });
         });
+
+        await emitPromise;
+        console.log('Full audio sent successfully');
     } catch (error) {
         console.error('Error processing audio:', error);
         addSystemMessage('error', 'Error processing audio. Please try again.');
@@ -189,12 +230,22 @@ async function sendAudioToServer() {
 
 function playAudioResponse(text) {
     if ('speechSynthesis' in window) {
-        // Cancel any ongoing speech
+        console.log('Playing audio response');
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1.0;
         utterance.pitch = 1.0;
+        
+        utterance.onstart = () => {
+            console.log('Started playing audio response');
+            setConversationState('Casey speaking');
+        };
+        
+        utterance.onend = () => {
+            console.log('Finished playing audio response');
+            setConversationState('paused');
+        };
         
         utterance.onerror = (event) => {
             console.error('Speech synthesis error:', event);
@@ -203,6 +254,7 @@ function playAudioResponse(text) {
 
         window.speechSynthesis.speak(utterance);
     } else {
+        console.warn('Text-to-speech not supported');
         addSystemMessage('warning', 'Text-to-speech is not supported in your browser.');
     }
 }
@@ -213,6 +265,7 @@ function handleTextSubmit(event) {
     const userMessage = messageInput.value.trim();
     
     if (userMessage) {
+        console.log('Sending text message');
         addMessage('User', userMessage);
         socket.emit('message', {
             message: userMessage,
@@ -224,6 +277,7 @@ function handleTextSubmit(event) {
 }
 
 function addMessage(sender, text) {
+    console.log(`Adding ${sender} message:`, text.substring(0, 50) + '...');
     const messagesDiv = document.getElementById('messages');
     const messageElement = document.createElement('div');
     messageElement.className = sender === 'User' ? 'user-message' : 'casey-message';
@@ -233,6 +287,7 @@ function addMessage(sender, text) {
 }
 
 function addSystemMessage(type, message) {
+    console.log(`System message (${type}):`, message);
     const messagesDiv = document.getElementById('messages');
     const messageElement = document.createElement('div');
     messageElement.className = `alert alert-${type} my-2`;
@@ -242,11 +297,13 @@ function addSystemMessage(type, message) {
 }
 
 function setConversationState(state) {
+    console.log('Setting conversation state:', state);
     const stateElement = document.getElementById('conversationState');
     const states = {
         'paused': 'alert-info',
         'user talking': 'alert-primary',
         'Casey thinking': 'alert-warning',
+        'Casey speaking': 'alert-success',
         'error': 'alert-danger'
     };
     
