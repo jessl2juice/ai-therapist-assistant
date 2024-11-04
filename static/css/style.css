@@ -102,21 +102,18 @@ body {
     height: 150px;
     border-radius: 50% !important;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 1rem;
-    transition: all 0.3s ease;
+    background-color: #0d6efd !important; /* Bootstrap primary blue */
 }
 
 .talk-button i {
     font-size: 2.5rem;
-    margin-bottom: 0.5rem;
 }
 
-.talk-button span {
-    font-size: 1rem;
-    text-align: center;
+.talk-label {
+    font-size: 1.1rem;
+    color: var(--bs-dark);
 }
 
 /* Button Group Styles */
@@ -180,8 +177,8 @@ body {
         font-size: 2rem;
     }
     
-    .talk-button span {
-        font-size: 0.9rem;
+    .talk-label {
+        font-size: 1rem;
     }
 
     .btn-group .btn {
