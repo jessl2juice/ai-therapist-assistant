@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, render_template
+from flask import Flask, render_template, send_from_directory
 from flask_socketio import SocketIO, emit
 from openai_helper import get_ai_response
 
@@ -16,6 +16,14 @@ socketio = SocketIO(app)
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/static/images/<path:filename>')
+def serve_image(filename):
+    try:
+        return send_from_directory(os.path.join(app.root_path, 'static', 'images'), filename)
+    except Exception as e:
+        logger.error(f"Error serving image {filename}: {str(e)}")
+        return 'Image not found', 404
 
 @socketio.on('message')
 def handle_message(data):
