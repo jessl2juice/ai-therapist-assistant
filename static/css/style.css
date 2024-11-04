@@ -7,7 +7,7 @@
 }
 
 body {
-    background: var(--bs-light);
+    background: var(--bs-white);
     color: var(--bs-dark);
 }
 
@@ -44,15 +44,19 @@ body {
     transform: scale(1.05);
 }
 
+/* Card Styles */
 .card {
+    background-color: var(--bs-white);
     border: 1px solid var(--bs-gray-200);
+    border-radius: 1rem;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     margin: 0 1rem;
+    padding: 1.5rem;
 }
 
 .card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 .card-title {
@@ -61,6 +65,12 @@ body {
     margin-bottom: 1rem;
 }
 
+.card-text {
+    color: var(--bs-gray-700);
+    line-height: 1.6;
+}
+
+/* Action Buttons */
 .action-buttons {
     margin-top: 3rem;
 }
@@ -68,7 +78,42 @@ body {
 .action-buttons .btn {
     padding: 0.75rem 2.5rem;
     font-weight: 500;
+    border-radius: 0.5rem;
 }
 
-/* Rest of the existing styles... */
-[Previous CSS content continues...]
+.action-buttons .btn-primary {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.action-buttons .btn-outline-primary {
+    color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.action-buttons .btn-outline-primary:hover {
+    background-color: var(--bs-primary);
+    color: var(--bs-white);
+}
+
+/* Messages Section */
+.messages-container {
+    background-color: var(--bs-light);
+    border-radius: 0.5rem;
+}
+
+.user-message, .casey-message {
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-radius: 0.5rem;
+}
+
+.user-message {
+    background-color: var(--message-bg-user);
+    color: var(--message-color-user);
+}
+
+.casey-message {
+    background-color: var(--message-bg-casey);
+    color: var(--message-color-casey);
+}
