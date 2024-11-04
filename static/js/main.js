@@ -6,6 +6,87 @@ let currentTab = 'voice';
 let isRecording = false;
 let mediaRecorder;
 let audioChunks = [];
+let voiceSettings = {
+    voice: null,
+    rate: 1.0,
+    pitch: 1.0,
+    volume: 1.0
+};
+
+// Load saved voice settings
+function loadVoiceSettings() {
+    const savedSettings = localStorage.getItem('voiceSettings');
+    if (savedSettings) {
+        voiceSettings = JSON.parse(savedSettings);
+    }
+}
+
+// Save voice settings
+function saveVoiceSettings() {
+    localStorage.setItem('voiceSettings', JSON.stringify(voiceSettings));
+}
+
+// Initialize voice settings
+function initVoiceSettings() {
+    loadVoiceSettings();
+    
+    // Initialize voice selection
+    window.speechSynthesis.onvoiceschanged = () => {
+        const voices = window.speechSynthesis.getVoices();
+        const voiceSelect = document.getElementById('voiceSelect');
+        voiceSelect.innerHTML = '';
+        
+        voices.forEach((voice, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = `${voice.name} - ${voice.lang}`;
+            if (voiceSettings.voice && voice.name === voiceSettings.voice.name) {
+                option.selected = true;
+            }
+            voiceSelect.appendChild(option);
+        });
+    };
+
+    // Set initial values for range inputs
+    document.getElementById('rateRange').value = voiceSettings.rate;
+    document.getElementById('rateValue').textContent = voiceSettings.rate;
+    document.getElementById('pitchRange').value = voiceSettings.pitch;
+    document.getElementById('pitchValue').textContent = voiceSettings.pitch;
+    document.getElementById('volumeRange').value = voiceSettings.volume;
+    document.getElementById('volumeValue').textContent = voiceSettings.volume;
+
+    // Voice selection change handler
+    document.getElementById('voiceSelect').addEventListener('change', (e) => {
+        const voices = window.speechSynthesis.getVoices();
+        voiceSettings.voice = voices[e.target.value];
+        saveVoiceSettings();
+    });
+
+    // Range input handlers
+    document.getElementById('rateRange').addEventListener('input', (e) => {
+        voiceSettings.rate = parseFloat(e.target.value);
+        document.getElementById('rateValue').textContent = voiceSettings.rate;
+        saveVoiceSettings();
+    });
+
+    document.getElementById('pitchRange').addEventListener('input', (e) => {
+        voiceSettings.pitch = parseFloat(e.target.value);
+        document.getElementById('pitchValue').textContent = voiceSettings.pitch;
+        saveVoiceSettings();
+    });
+
+    document.getElementById('volumeRange').addEventListener('input', (e) => {
+        voiceSettings.volume = parseFloat(e.target.value);
+        document.getElementById('volumeValue').textContent = voiceSettings.volume;
+        saveVoiceSettings();
+    });
+
+    // Test voice button handler
+    document.getElementById('testVoice').addEventListener('click', () => {
+        const testText = "Hello, I'm Casey, your AI therapist assistant.";
+        playAudioResponse(testText);
+    });
+}
 
 // Socket event listeners
 socket.on('connect', () => {
@@ -113,7 +194,6 @@ function updateTalkButton(isRecording) {
         buttonLabel.textContent = 'Press to Talk';
     }
     
-    // Always keep microphone icon
     button.querySelector('i').className = 'fas fa-microphone';
 }
 
@@ -158,49 +238,48 @@ function setConversationState(state) {
 
 function playAudioResponse(text) {
     if ('speechSynthesis' in window) {
-        const talkButton = document.getElementById('talkButton');
-        const buttonLabel = document.querySelector('.talk-label');
-        
         // Cancel any ongoing speech
         window.speechSynthesis.cancel();
         
         const utterance = new SpeechSynthesisUtterance(text);
         
+        // Apply voice settings
+        if (voiceSettings.voice) {
+            utterance.voice = voiceSettings.voice;
+        }
+        utterance.rate = voiceSettings.rate;
+        utterance.pitch = voiceSettings.pitch;
+        utterance.volume = voiceSettings.volume;
+        
         utterance.onstart = () => {
             setConversationState('Casey speaking');
-            // Change button appearance
-            talkButton.classList.remove('btn-primary');
-            talkButton.classList.add('btn-danger');
-            talkButton.querySelector('i').classList.remove('fa-microphone');
-            talkButton.querySelector('i').classList.add('fa-stop');
-            buttonLabel.textContent = 'Stop';
+            updateTalkButtonForSpeech(true);
         };
         
         utterance.onend = () => {
             setConversationState('paused');
-            // Restore button appearance
-            talkButton.classList.remove('btn-danger');
-            talkButton.classList.add('btn-primary');
-            talkButton.querySelector('i').classList.remove('fa-stop');
-            talkButton.querySelector('i').classList.add('fa-microphone');
-            buttonLabel.textContent = 'Press to Talk';
+            updateTalkButtonForSpeech(false);
         };
         
         window.speechSynthesis.speak(utterance);
-        
-        // Add click handler for stopping speech
-        talkButton.onclick = () => {
-            if (window.speechSynthesis.speaking) {
-                window.speechSynthesis.cancel();
-                // Manually restore button appearance since onend might not fire
-                talkButton.classList.remove('btn-danger');
-                talkButton.classList.add('btn-primary');
-                talkButton.querySelector('i').classList.remove('fa-stop');
-                talkButton.querySelector('i').classList.add('fa-microphone');
-                buttonLabel.textContent = 'Press to Talk';
-                setConversationState('paused');
-            }
-        };
+    }
+}
+
+function updateTalkButtonForSpeech(isSpeaking) {
+    const talkButton = document.getElementById('talkButton');
+    const buttonLabel = document.querySelector('.talk-label');
+    const stopButton = document.getElementById('stopButton');
+    
+    if (isSpeaking) {
+        talkButton.classList.remove('btn-primary');
+        talkButton.classList.add('btn-info');
+        buttonLabel.textContent = 'Casey Speaking';
+        stopButton.classList.remove('d-none');
+    } else {
+        talkButton.classList.remove('btn-info');
+        talkButton.classList.add('btn-primary');
+        buttonLabel.textContent = 'Press to Talk';
+        stopButton.classList.add('d-none');
     }
 }
 
@@ -236,5 +315,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     document.getElementById('textForm').addEventListener('submit', handleTextSubmit);
+    
+    // Initialize voice settings
+    initVoiceSettings();
+    
+    // Initialize default tab
     handleTabChange('voice');
 });

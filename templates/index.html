@@ -18,7 +18,7 @@
                     <button class="btn btn-outline-secondary" title="Login">
                         <i class="fas fa-user"></i>
                     </button>
-                    <button class="btn btn-outline-secondary" title="Settings">
+                    <button class="btn btn-outline-secondary" title="Settings" data-bs-toggle="modal" data-bs-target="#settingsModal">
                         <i class="fas fa-cog"></i>
                     </button>
                 </div>
@@ -82,6 +82,42 @@
         </main>
     </div>
 
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settingsModalLabel">Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 class="mb-3">Voice Settings</h6>
+                    <div class="mb-3">
+                        <label for="voiceSelect" class="form-label">Voice</label>
+                        <select class="form-select" id="voiceSelect"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="rateRange" class="form-label">Rate: <span id="rateValue">1.0</span></label>
+                        <input type="range" class="form-range" id="rateRange" min="0.5" max="2" step="0.1" value="1.0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="pitchRange" class="form-label">Pitch: <span id="pitchValue">1.0</span></label>
+                        <input type="range" class="form-range" id="pitchRange" min="0.5" max="2" step="0.1" value="1.0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="volumeRange" class="form-label">Volume: <span id="volumeValue">1.0</span></label>
+                        <input type="range" class="form-range" id="volumeRange" min="0" max="1" step="0.1" value="1.0">
+                    </div>
+                    <button id="testVoice" class="btn btn-secondary">Test Voice</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
