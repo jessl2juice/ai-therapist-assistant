@@ -93,6 +93,22 @@ socket.on('connect', () => {
     console.log('Connected to server');
 });
 
+socket.on('disconnect', () => {
+    console.log('Disconnected from server');
+    if (document.getElementById('conversationState').textContent === 'Conversation State: Casey thinking') {
+        setConversationState('error: Connection lost. Please try again.');
+        updateTalkButton(false);
+    }
+});
+
+socket.on('connect_error', (error) => {
+    console.error('Connection error:', error);
+    if (document.getElementById('conversationState').textContent === 'Conversation State: Casey thinking') {
+        setConversationState('error: Connection error. Please try again.');
+        updateTalkButton(false);
+    }
+});
+
 socket.on('response', (data) => {
     if (data.content) {
         addMessage('Casey', data.content);
@@ -145,19 +161,7 @@ async function startRecording() {
             }
         };
         
-        mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            const reader = new FileReader();
-            
-            reader.onload = () => {
-                const base64Audio = reader.result.split(',')[1];
-                socket.emit('audio', { audio: base64Audio });
-            };
-            
-            reader.readAsDataURL(audioBlob);
-            audioChunks = [];
-            setConversationState('Casey thinking');
-        };
+        mediaRecorder.onstop = sendAudioToAPI;
         
         mediaRecorder.start();
         isRecording = true;
@@ -197,6 +201,30 @@ function updateTalkButton(isRecording) {
     button.querySelector('i').className = 'fas fa-microphone';
 }
 
+function sendAudioToAPI() {
+    try {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        audioChunks = [];
+        
+        const reader = new FileReader();
+        reader.onload = () => {
+            const base64Audio = reader.result.split(',')[1];
+            socket.emit('audio', { audio: base64Audio });
+        };
+        
+        reader.onerror = () => {
+            setConversationState('error: Failed to process audio. Please try again.');
+            updateTalkButton(false);
+        };
+        
+        reader.readAsDataURL(audioBlob);
+    } catch (error) {
+        console.error('Error sending audio:', error);
+        setConversationState('error: Failed to send audio. Please try again.');
+        updateTalkButton(false);
+    }
+}
+
 // Text handling
 function handleTextSubmit(event) {
     event.preventDefault();
@@ -234,6 +262,16 @@ function setConversationState(state) {
         state === 'Casey speaking' ? 'alert-info' :
         'alert-info'
     );
+    
+    // Add timeout for thinking state
+    if (state === 'Casey thinking') {
+        setTimeout(() => {
+            if (document.getElementById('conversationState').textContent === 'Conversation State: Casey thinking') {
+                setConversationState('error: Response timeout. Please try again.');
+                updateTalkButton(false);
+            }
+        }, 10000); // 10 second timeout
+    }
 }
 
 function playAudioResponse(text) {
