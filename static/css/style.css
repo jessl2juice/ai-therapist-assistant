@@ -47,7 +47,7 @@ h1 {
 }
 
 .tab-group button.active {
-    background-color: #3498db;
+    background-color: #1E90FF;
     color: white;
 }
 
@@ -58,10 +58,10 @@ h1 {
 }
 
 .talk-button {
-    width: 100px;
-    height: 100px;
+    width: 150px;
+    height: 150px;
     border-radius: 50%;
-    background-color: #3498db;
+    background-color: #1E90FF;
     color: white;
     border: none;
     cursor: pointer;
@@ -73,11 +73,11 @@ h1 {
 }
 
 .talk-button:hover {
-    background-color: #2980b9;
+    background-color: #007FFF;
 }
 
 .talk-button i {
-    font-size: 32px;
+    font-size: 48px;
 }
 
 .talk-label {
@@ -139,7 +139,7 @@ h1 {
 }
 
 .user-message {
-    background-color: #3498db;
+    background-color: #1E90FF;
     color: white;
     margin-left: auto;
 }
