@@ -45,16 +45,18 @@
                     <div class="messages-container mb-4">
                         <div id="messages" class="messages p-3 rounded"></div>
                     </div>
-                    <form id="textForm" class="input-group">
-                        <input type="text" 
-                               class="form-control form-control-lg" 
-                               id="messageInput" 
-                               placeholder="Type your message..." 
-                               required>
-                        <button class="btn btn-primary" type="submit">
-                            <i class="fas fa-paper-plane me-2"></i>Send
-                        </button>
-                    </form>
+                    <div class="input-group input-group-lg">
+                        <form id="textForm" class="d-flex w-100">
+                            <input type="text" 
+                                   class="form-control"
+                                   id="messageInput" 
+                                   placeholder="Type your message..." 
+                                   required>
+                            <button class="btn btn-primary px-4" type="submit">
+                                <i class="fas fa-paper-plane me-2"></i>Send
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </main>
