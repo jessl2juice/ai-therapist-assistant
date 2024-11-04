@@ -7,7 +7,7 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
+    background-color: white;
     color: #333;
     line-height: 1.6;
 }
@@ -16,6 +16,19 @@ body {
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
+    position: relative;
+}
+
+/* Logo styles */
+.logo-container {
+    text-align: center;
+    margin: 20px auto 40px;
+    max-width: 300px;
+}
+
+.logo-container img {
+    width: 100%;
+    height: auto;
 }
 
 /* Header styles */
@@ -178,7 +191,7 @@ h1 {
     background-color: #27ae60;
 }
 
-/* Alert styles - removed box styling but kept colors */
+/* Alert styles */
 .alert {
     padding: 10px;
     margin: 10px 0;
