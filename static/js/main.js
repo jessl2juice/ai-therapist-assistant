@@ -251,12 +251,15 @@ function playAudioResponse(text) {
             console.error('Speech synthesis error:', event);
             addSystemMessage('error', 'Error playing audio response. Please read the text instead.');
             stopButton.style.display = 'none';
+            setConversationState('paused');
         };
 
         window.speechSynthesis.speak(utterance);
         
         stopButton.onclick = () => {
             window.speechSynthesis.cancel();
+            setConversationState('paused');
+            stopButton.style.display = 'none';
         };
     } else {
         console.warn('Text-to-speech not supported');
@@ -305,20 +308,20 @@ function setConversationState(state) {
     console.log('Setting conversation state:', state);
     const stateElement = document.getElementById('conversationState');
     const states = {
-        'paused': 'alert-info',
         'user talking': 'alert-primary',
-        'Casey thinking': 'alert-warning',
         'Casey speaking': 'alert-success',
         'error': 'alert-danger'
     };
     
-    if (state === 'paused') {
-        stateElement.style.visibility = 'hidden';
-        stateElement.innerText = '';
-    } else {
+    // Only show state for active speaking states and errors
+    if (state === 'user talking' || state === 'Casey speaking' || state === 'error') {
         stateElement.style.visibility = 'visible';
         stateElement.className = `alert ${states[state] || 'alert-info'}`;
-        stateElement.innerText = `Conversation State: ${state}`;
+        stateElement.innerText = `${state}`;
+    } else {
+        // Hide state for other states (paused, Casey thinking)
+        stateElement.style.visibility = 'hidden';
+        stateElement.innerText = '';
     }
 }
 
