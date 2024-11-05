@@ -3,6 +3,12 @@ let currentTab = 'voice';
 let isRecording = false;
 let mediaRecorder;
 let audioChunks = [];
+let selectedVoice = null;
+let voiceSettings = {
+    rate: 1.0,
+    pitch: 1.0,
+    volume: 1.0
+};
 const MAX_CHUNK_SIZE = 1024 * 1024;
 const SOCKET_TIMEOUT = 30000;
 
@@ -45,9 +51,13 @@ socket.on('error', (data) => {
 });
 
 function toggleSettings() {
-    // This function will be expanded later to show a settings modal
-    // For now, it only rotates the icon on click through CSS
-    console.log('Settings icon clicked');
+    const modal = document.getElementById('settingsModal');
+    if (modal.classList.contains('show')) {
+        modal.classList.remove('show');
+    } else {
+        modal.classList.add('show');
+        loadVoices();
+    }
 }
 
 function setConnectionStatus(status) {
@@ -69,7 +79,7 @@ function handleTabChange(selectedTab) {
     document.getElementById('voiceTabContent').style.display = selectedTab === 'voice' ? 'block' : 'none';
     document.getElementById('textTabContent').style.display = selectedTab === 'text' ? 'block' : 'none';
     
-    document.querySelectorAll('.btn-group button').forEach(btn => {
+    document.querySelectorAll('.tab-group button').forEach(btn => {
         btn.classList.remove('active');
     });
     document.getElementById(`${selectedTab}Tab`).classList.add('active');
@@ -230,43 +240,92 @@ async function sendAudioToServer() {
     }
 }
 
-function playAudioResponse(text) {
+function loadVoices() {
+    const voiceSelect = document.getElementById('voiceSelect');
+    voiceSelect.innerHTML = '';
+    
+    window.speechSynthesis.getVoices().forEach(voice => {
+        const option = document.createElement('option');
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        if (selectedVoice && voice.name === selectedVoice.name) {
+            option.selected = true;
+        }
+        voiceSelect.appendChild(option);
+    });
+}
+
+function updateVoiceSettings() {
+    const voices = window.speechSynthesis.getVoices();
+    const selectedVoiceName = document.getElementById('voiceSelect').value;
+    selectedVoice = voices.find(voice => voice.name === selectedVoiceName);
+    
+    voiceSettings.rate = parseFloat(document.getElementById('rateRange').value);
+    voiceSettings.pitch = parseFloat(document.getElementById('pitchRange').value);
+    voiceSettings.volume = parseFloat(document.getElementById('volumeRange').value);
+    
+    document.getElementById('rateValue').textContent = voiceSettings.rate.toFixed(1);
+    document.getElementById('pitchValue').textContent = voiceSettings.pitch.toFixed(1);
+    document.getElementById('volumeValue').textContent = voiceSettings.volume.toFixed(1);
+}
+
+function testVoice() {
+    const testText = "Hello, I'm Casey, your AI therapist assistant. How are you feeling today?";
+    playAudioResponse(testText, true);
+}
+
+function playAudioResponse(text, isTest = false) {
     if ('speechSynthesis' in window) {
         console.log('Playing audio response');
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
+        
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+        }
+        utterance.rate = voiceSettings.rate;
+        utterance.pitch = voiceSettings.pitch;
+        utterance.volume = voiceSettings.volume;
         
         const stopButton = document.getElementById('stopButton');
-        stopButton.style.display = 'flex';
+        if (!isTest) {
+            stopButton.style.display = 'flex';
+        }
         
         utterance.onstart = () => {
             console.log('Started playing audio response');
-            setConversationState('Casey speaking');
+            if (!isTest) {
+                setConversationState('Casey speaking');
+            }
         };
         
         utterance.onend = () => {
             console.log('Finished playing audio response');
-            setConversationState('paused');
-            stopButton.style.display = 'none';
+            if (!isTest) {
+                setConversationState('paused');
+                stopButton.style.display = 'none';
+            }
         };
         
         utterance.onerror = (event) => {
             console.error('Speech synthesis error:', event);
             addSystemMessage('error', 'Error playing audio response. Please read the text instead.');
-            stopButton.style.display = 'none';
-            setConversationState('paused');
+            if (!isTest) {
+                stopButton.style.display = 'none';
+                setConversationState('paused');
+            }
         };
 
         window.speechSynthesis.speak(utterance);
         
-        stopButton.onclick = () => {
-            window.speechSynthesis.cancel();
-            setConversationState('paused');
-            stopButton.style.display = 'none';
-        };
+        if (!isTest) {
+            stopButton.onclick = () => {
+                window.speechSynthesis.cancel();
+                setConversationState('paused');
+                stopButton.style.display = 'none';
+            };
+        }
     } else {
         console.warn('Text-to-speech not supported');
         addSystemMessage('warning', 'Text-to-speech is not supported in your browser.');
@@ -329,12 +388,31 @@ function setConversationState(state) {
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    if ('speechSynthesis' in window) {
+        setTimeout(loadVoices, 100);
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    document.querySelector('.close').onclick = toggleSettings;
+    window.onclick = (event) => {
+        const modal = document.getElementById('settingsModal');
+        if (event.target === modal) {
+            modal.classList.remove('show');
+        }
+    };
+
+    document.getElementById('voiceSelect').addEventListener('change', updateVoiceSettings);
+    document.getElementById('rateRange').addEventListener('input', updateVoiceSettings);
+    document.getElementById('pitchRange').addEventListener('input', updateVoiceSettings);
+    document.getElementById('volumeRange').addEventListener('input', updateVoiceSettings);
+    document.getElementById('testVoiceButton').addEventListener('click', testVoice);
+
+    setConversationState('paused');
+});
+
 document.getElementById('talkButton').addEventListener('mousedown', startRecording);
 document.getElementById('talkButton').addEventListener('mouseup', stopRecording);
 document.getElementById('textForm').addEventListener('submit', handleTextSubmit);
 
 handleTabChange('voice');
-
-document.addEventListener('DOMContentLoaded', () => {
-    setConversationState('paused');
-});

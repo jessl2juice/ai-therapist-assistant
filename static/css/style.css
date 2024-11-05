@@ -219,3 +219,96 @@ h1 {
 .alert-warning { color: #856404; }
 .alert-success { color: #155724; }
 .alert-danger { color: #721c24; }
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 500px;
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #333;
+}
+
+.settings-group {
+    margin-bottom: 20px;
+}
+
+.settings-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #2c3e50;
+}
+
+.settings-group select,
+.settings-group input[type="range"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.settings-group input[type="range"] {
+    padding: 0;
+}
+
+.test-voice-button {
+    background-color: #1E90FF;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.test-voice-button:hover {
+    background-color: #007FFF;
+}
+
+/* Modal animation */
+@keyframes modalFadeIn {
+    from {opacity: 0}
+    to {opacity: 1}
+}
+
+.modal.show {
+    display: block;
+    animation: modalFadeIn 0.3s;
+}

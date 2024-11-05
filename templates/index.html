@@ -45,6 +45,36 @@
         </main>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h3>Voice Settings</h3>
+                <div class="settings-group">
+                    <label for="voiceSelect">Voice:</label>
+                    <select id="voiceSelect"></select>
+                </div>
+                <div class="settings-group">
+                    <label for="rateRange">Rate: <span id="rateValue">1.0</span></label>
+                    <input type="range" id="rateRange" min="0.5" max="2" value="1" step="0.1">
+                </div>
+                <div class="settings-group">
+                    <label for="pitchRange">Pitch: <span id="pitchValue">1.0</span></label>
+                    <input type="range" id="pitchRange" min="0.5" max="2" value="1" step="0.1">
+                </div>
+                <div class="settings-group">
+                    <label for="volumeRange">Volume: <span id="volumeValue">1.0</span></label>
+                    <input type="range" id="volumeRange" min="0" max="1" value="1" step="0.1">
+                </div>
+                <button id="testVoiceButton" class="test-voice-button">Test Voice</button>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
